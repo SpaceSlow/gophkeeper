@@ -12,7 +12,7 @@ func SetupRouter(db *store.DB) *gin.Engine {
 
 	public := router.Group("/api")
 	public.POST("/register", handlers.RegisterHandler(db))
-	public.POST("/login", handlers.LoginHandler)
+	public.POST("/login", handlers.LoginHandler(db))
 
 	return router
 }

@@ -13,10 +13,11 @@ type ServerConfig struct {
 	CertificatePath      string
 	PrivateKeyPath       string
 	DSN                  string
+	SecretKey            string
 	KeyLen               int
 	PasswordIterationNum int
-
-	TimeoutShutdown time.Duration
+	TokenLifetime        time.Duration
+	TimeoutShutdown      time.Duration
 }
 
 var defaultConfig = &ServerConfig{
@@ -24,6 +25,8 @@ var defaultConfig = &ServerConfig{
 	CertificatePath:      os.Getenv("CERTIFICATE"),
 	PrivateKeyPath:       os.Getenv("PRIVATE_KEY"),
 	DSN:                  os.Getenv("DSN"),
+	SecretKey:            os.Getenv("SECRET_KEY"),
+	TokenLifetime:        time.Hour,
 	KeyLen:               32,
 	PasswordIterationNum: 500_000,
 	TimeoutShutdown:      5 * time.Second,

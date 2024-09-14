@@ -29,3 +29,29 @@ func GenerateHash(password string, keyLen, passwordIterationsNum int) (string, e
 		"$",
 	), nil
 }
+
+func IsValid(password, passwordHash string, keyLen int) (bool, error) {
+	fields := strings.Split(passwordHash, "$")
+
+	if len(fields) != 4 {
+		return false, ErrInvalidPasswordHash
+	}
+	alg := fields[0]
+	switch alg {
+	case "pbkdf2-sha256":
+	default:
+		return false, &UnknownHashAlgError{Alg: alg}
+	}
+	salt, err := base64.StdEncoding.DecodeString(fields[1])
+	if err != nil {
+		return false, err
+	}
+	iterationNumber, err := strconv.Atoi(fields[2])
+	if err != nil {
+		return false, err
+	}
+	storedHash := fields[3]
+	calculateHash := base64.StdEncoding.EncodeToString(pbkdf2.Key([]byte(password), salt, iterationNumber, keyLen, sha256.New))
+
+	return calculateHash == storedHash, nil
+}
