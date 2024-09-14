@@ -13,6 +13,7 @@ import (
 
 	"github.com/SpaceSlow/gophkeeper/internal/config"
 	"github.com/SpaceSlow/gophkeeper/internal/router"
+	"github.com/SpaceSlow/gophkeeper/internal/store"
 )
 
 type Server struct {
@@ -25,7 +26,7 @@ type Server struct {
 func NewServer() (*Server, error) {
 	var srv Server
 	srv.ctx = context.Background()
-	srv.config = config.DefaultConfig
+	srv.config = config.GetServerConfig()
 	return &srv, nil
 }
 
@@ -44,6 +45,19 @@ func (s *Server) Run() error {
 		slog.Error("failed to gracefully shutdown the service")
 	})
 
+	db, err := store.Connect(ctx, s.config.DSN)
+	if err != nil {
+		return fmt.Errorf("failed to initialize a new DB: %w", err)
+	}
+	defer db.Close()
+
+	g.Go(func() error {
+		defer slog.Info("closed DB")
+		<-ctx.Done()
+		db.Close()
+		return nil
+	})
+
 	g.Go(func() (err error) {
 		defer func() {
 			errRec := recover()
@@ -54,7 +68,7 @@ func (s *Server) Run() error {
 
 		s.srv = &http.Server{
 			Addr:         s.config.NetAddress.String(),
-			Handler:      router.SetupRouter(),
+			Handler:      router.SetupRouter(db),
 			TLSConfig:    s.tlsConfig(),
 			TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler), 0),
 		}

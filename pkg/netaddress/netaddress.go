@@ -1,14 +1,8 @@
-package config
+package netaddress
 
 import (
-	"errors"
 	"strconv"
 	"strings"
-)
-
-var (
-	ErrIncorrectNetAddress = errors.New("need address in a form host:port")
-	ErrIncorrectPort       = errors.New("error occurred when parsing an incorrect port. The port requires a decimal number in the range 1-65535")
 )
 
 type NetAddress struct {
