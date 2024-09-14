@@ -54,7 +54,7 @@ func (s *Server) Run() error {
 
 		s.srv = &http.Server{
 			Addr:         s.config.NetAddress.String(),
-			Handler:      router.Router(),
+			Handler:      router.SetupRouter(),
 			TLSConfig:    s.tlsConfig(),
 			TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler), 0),
 		}

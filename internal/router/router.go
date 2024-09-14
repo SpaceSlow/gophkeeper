@@ -2,16 +2,15 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
-	"net/http"
+
+	"github.com/SpaceSlow/gophkeeper/internal/handlers"
 )
 
-func Router() *gin.Engine {
-	r := gin.Default()
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "pong",
-		})
-	})
+func SetupRouter() *gin.Engine {
+	router := gin.Default()
 
-	return r
+	public := router.Group("/api")
+	public.POST("/register", handlers.RegisterHandler)
+
+	return router
 }
