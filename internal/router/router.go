@@ -17,6 +17,7 @@ func SetupRouter(db *store.DB) *gin.Engine {
 
 	protected := router.Group("/api")
 	protected.Use(middlewares.AuthMiddleware(db))
+	protected.POST("/sensitive_records", handlers.SensitiveRecordUploadHandler(db))
 
 	return router
 }
