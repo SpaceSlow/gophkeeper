@@ -27,7 +27,7 @@ func Connect(ctx context.Context, dsn string) (*DB, error) {
 	}, nil
 }
 
-func (db *DB) CheckUsername(ctx context.Context, username string) (bool, error) {
+func (db *DB) ExistUsername(ctx context.Context, username string) (bool, error) {
 	row := db.pool.QueryRow(
 		ctx,
 		`SELECT EXISTS(SELECT id FROM users WHERE username=$1)`,

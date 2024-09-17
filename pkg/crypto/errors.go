@@ -5,6 +5,7 @@ import (
 	"fmt"
 )
 
+var ErrInvalidAuthorizationHeader = errors.New("invalid authorization header")
 var ErrInvalidToken = errors.New("token is not valid")
 var ErrInvalidPasswordHash = errors.New("invalid password hash layout")
 

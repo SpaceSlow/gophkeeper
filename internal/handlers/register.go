@@ -32,10 +32,10 @@ func RegisterHandler(db *store.DB) func(c *gin.Context) {
 			return
 		}
 
-		if exist, err := db.CheckUsername(context.TODO(), registerRequest.Username); err != nil {
+		if existed, err := db.ExistUsername(context.TODO(), registerRequest.Username); err != nil {
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
-		} else if exist {
+		} else if existed {
 			c.AbortWithStatus(http.StatusConflict)
 			return
 		}
