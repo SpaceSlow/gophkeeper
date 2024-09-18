@@ -1,24 +1,24 @@
 package sensitive_records
 
 import (
-	"bytes"
 	"fmt"
-	"net/http"
+	"mime/multipart"
+
+	"github.com/gin-gonic/gin"
 )
+
+type textFileRequest struct {
+	Preview  string                `form:"preview"`
+	Metadata string                `form:"metadata"`
+	Data     *multipart.FileHeader `form:"data"`
+}
 
 type TextFileStrategy struct{}
 
-func (s *TextFileStrategy) Upload(req *http.Request) (string, error) {
-	file, _, err := req.FormFile("file")
-	if err != nil {
+func (s *TextFileStrategy) Upload(c *gin.Context) (string, error) {
+	var textFileReq textFileRequest
+	if err := c.Bind(&textFileReq); err != nil {
 		return "", err
 	}
-	defer file.Close()
-
-	buf := new(bytes.Buffer)
-	_, err = buf.ReadFrom(file)
-	if err != nil {
-		return "", err
-	}
-	return fmt.Sprintf("Text file content: %s", buf.String()), nil
+	return fmt.Sprintf("Text file"), nil
 }

@@ -1,24 +1,35 @@
 package sensitive_records
 
 import (
-	"encoding/json"
 	"fmt"
-	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
-type PaymentCardStrategy struct{}
-
-type PaymentCardData struct {
+type paymentCardData struct {
 	Number     string `json:"number"`
 	ExpireDate string `json:"expire_date"`
 	Cardholder string `json:"cardholder"`
 	Code       string `json:"code"`
 }
 
-func (s *PaymentCardStrategy) Upload(req *http.Request) (string, error) {
-	var credentials PaymentCardData
-	if err := json.NewDecoder(req.Body).Decode(&credentials); err != nil {
+type paymentCardRequest struct {
+	Preview  string          `json:"preview"`
+	Metadata string          `json:"metadata"`
+	Data     paymentCardData `json:"data"`
+}
+
+type PaymentCardStrategy struct{}
+
+func (s *PaymentCardStrategy) Upload(c *gin.Context) (string, error) {
+	var paymentCardReq paymentCardRequest
+	if err := c.BindJSON(&paymentCardReq); err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("Payment card credentials received: Number=%s, Expire date=%s, Cardholder=%s", credentials.Number, credentials.ExpireDate, credentials.Cardholder), nil
+	return fmt.Sprintf(
+		"Payment card credentials received: Number=%s, Expire date=%s, Cardholder=%s",
+		paymentCardReq.Data.Number,
+		paymentCardReq.Data.ExpireDate,
+		paymentCardReq.Data.Cardholder,
+	), nil
 }

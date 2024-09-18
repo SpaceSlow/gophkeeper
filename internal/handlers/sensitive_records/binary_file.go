@@ -1,24 +1,24 @@
 package sensitive_records
 
 import (
-	"bytes"
 	"fmt"
-	"net/http"
+	"mime/multipart"
+
+	"github.com/gin-gonic/gin"
 )
+
+type binaryFileRequest struct {
+	Preview  string                `form:"preview"`
+	Metadata string                `form:"metadata"`
+	Data     *multipart.FileHeader `form:"data"`
+}
 
 type BinaryFileStrategy struct{}
 
-func (s *BinaryFileStrategy) Upload(req *http.Request) (string, error) {
-	file, _, err := req.FormFile("file")
-	if err != nil {
+func (s *BinaryFileStrategy) Upload(c *gin.Context) (string, error) {
+	var binaryFileReq binaryFileRequest
+	if err := c.Bind(&binaryFileReq); err != nil {
 		return "", err
 	}
-	defer file.Close()
-
-	buf := new(bytes.Buffer)
-	_, err = buf.ReadFrom(file)
-	if err != nil {
-		return "", err
-	}
-	return fmt.Sprintf("Binary file of size %d bytes", buf.Len()), nil
+	return fmt.Sprintf("Binary file"), nil
 }
