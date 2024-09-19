@@ -1,4 +1,4 @@
-package server
+package application
 
 import (
 	"context"
@@ -11,14 +11,13 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
-	"github.com/SpaceSlow/gophkeeper/internal/config"
-	"github.com/SpaceSlow/gophkeeper/internal/router"
-	"github.com/SpaceSlow/gophkeeper/internal/store"
+	"github.com/SpaceSlow/gophkeeper/internal"
+	"github.com/SpaceSlow/gophkeeper/internal/infrastructure/users"
 )
 
 type Server struct {
 	ctx    context.Context
-	config *config.ServerConfig
+	config *internal.ServerConfig
 
 	srv *http.Server
 }
@@ -26,7 +25,7 @@ type Server struct {
 func NewServer() (*Server, error) {
 	var srv Server
 	srv.ctx = context.Background()
-	srv.config = config.GetServerConfig()
+	srv.config = internal.GetServerConfig()
 	return &srv, nil
 }
 
@@ -45,16 +44,16 @@ func (s *Server) Run() error {
 		slog.Error("failed to gracefully shutdown the service")
 	})
 
-	db, err := store.Connect(ctx, s.config.DSN)
+	userRepo, err := users.NewPostgresRepo(ctx, s.config.DSN)
 	if err != nil {
-		return fmt.Errorf("failed to initialize a new DB: %w", err)
+		return fmt.Errorf("failed to initialize a user repo: %w", err)
 	}
-	defer db.Close()
+	defer userRepo.Close()
 
 	g.Go(func() error {
-		defer slog.Info("closed DB")
+		defer slog.Info("closed user repo")
 		<-ctx.Done()
-		db.Close()
+		userRepo.Close()
 		return nil
 	})
 
@@ -68,7 +67,7 @@ func (s *Server) Run() error {
 
 		s.srv = &http.Server{
 			Addr:         s.config.NetAddress.String(),
-			Handler:      router.SetupRouter(db),
+			Handler:      SetupRouter(userRepo), // TODO: fix
 			TLSConfig:    s.tlsConfig(),
 			TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler), 0),
 		}

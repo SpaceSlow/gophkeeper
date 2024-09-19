@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type paymentCardData struct {
+type PaymentCard struct {
 	Number     string `json:"number"`
 	ExpireDate string `json:"expire_date"`
 	Cardholder string `json:"cardholder"`
@@ -14,9 +14,9 @@ type paymentCardData struct {
 }
 
 type paymentCardRequest struct {
-	Preview  string          `json:"preview"`
-	Metadata string          `json:"metadata"`
-	Data     paymentCardData `json:"data"`
+	Preview  string      `json:"preview"`
+	Metadata string      `json:"metadata"`
+	Data     PaymentCard `json:"data"`
 }
 
 type PaymentCardStrategy struct{}

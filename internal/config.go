@@ -1,4 +1,4 @@
-package config
+package internal
 
 import (
 	"os"
@@ -21,7 +21,7 @@ type ServerConfig struct {
 }
 
 var defaultConfig = &ServerConfig{
-	NetAddress:           netaddress.NetAddress{Port: 443},
+	NetAddress:           netaddress.NetAddress{Port: 8080},
 	CertificatePath:      os.Getenv("CERTIFICATE"),
 	PrivateKeyPath:       os.Getenv("PRIVATE_KEY"),
 	DSN:                  os.Getenv("DSN"),

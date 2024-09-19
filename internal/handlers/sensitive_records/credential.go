@@ -6,15 +6,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type credentialData struct {
+type Credential struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
 
 type credentialRequest struct {
-	Preview  string         `json:"preview"`
-	Metadata string         `json:"metadata"`
-	Data     credentialData `json:"data"`
+	Preview  string     `json:"preview"`
+	Metadata string     `json:"metadata"`
+	Data     Credential `json:"data"`
 }
 
 type CredentialStrategy struct{}

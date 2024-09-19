@@ -6,14 +6,14 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/SpaceSlow/gophkeeper/internal/config"
-	"github.com/SpaceSlow/gophkeeper/internal/store"
+	"github.com/SpaceSlow/gophkeeper/internal"
+	"github.com/SpaceSlow/gophkeeper/internal/application/users"
 	"github.com/SpaceSlow/gophkeeper/pkg/crypto"
 )
 
-func AuthMiddleware(db *store.DB) gin.HandlerFunc {
+func AuthMiddleware(r users.Repository) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if isAuthenticated(c, db) {
+		if isAuthenticated(c, r) {
 			c.Next()
 			return
 		}
@@ -21,16 +21,16 @@ func AuthMiddleware(db *store.DB) gin.HandlerFunc {
 	}
 }
 
-func isAuthenticated(c *gin.Context, db *store.DB) bool {
+func isAuthenticated(c *gin.Context, r users.Repository) bool {
 	jwt, err := crypto.ExtractToken(c)
 	if err != nil {
 		return false
 	}
-	username, err := crypto.Username(jwt, config.GetServerConfig().SecretKey)
+	username, err := crypto.Username(jwt, internal.GetServerConfig().SecretKey)
 	if err != nil {
 		return false
 	}
-	isExisted, err := db.ExistUsername(context.TODO(), username)
+	isExisted, err := r.ExistUsername(context.TODO(), username)
 	if err != nil || !isExisted {
 		return false
 	}
