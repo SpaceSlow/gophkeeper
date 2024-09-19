@@ -12,6 +12,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/SpaceSlow/gophkeeper/internal"
+	"github.com/SpaceSlow/gophkeeper/internal/infrastructure/sensitive_records"
 	"github.com/SpaceSlow/gophkeeper/internal/infrastructure/users"
 )
 
@@ -25,7 +26,7 @@ type Server struct {
 func NewServer() (*Server, error) {
 	var srv Server
 	srv.ctx = context.Background()
-	srv.config = internal.GetServerConfig()
+	srv.config = internal.LoadServerConfig()
 	return &srv, nil
 }
 
@@ -44,6 +45,10 @@ func (s *Server) Run() error {
 		slog.Error("failed to gracefully shutdown the service")
 	})
 
+	if err := internal.RunMigrations(s.config.DSN); err != nil {
+		return fmt.Errorf("failed to run DB migrations: %w", err)
+	}
+
 	userRepo, err := users.NewPostgresRepo(ctx, s.config.DSN)
 	if err != nil {
 		return fmt.Errorf("failed to initialize a user repo: %w", err)
@@ -57,6 +62,19 @@ func (s *Server) Run() error {
 		return nil
 	})
 
+	sensitiveRecordRepo, err := sensitive_records.NewPostgresRepo(ctx, s.config.DSN)
+	if err != nil {
+		return fmt.Errorf("failed to initialize a sensitive record repo: %w", err)
+	}
+	defer sensitiveRecordRepo.Close()
+
+	g.Go(func() error {
+		defer slog.Info("closed sensitive record repo")
+		<-ctx.Done()
+		sensitiveRecordRepo.Close()
+		return nil
+	})
+
 	g.Go(func() (err error) {
 		defer func() {
 			errRec := recover()
@@ -67,7 +85,7 @@ func (s *Server) Run() error {
 
 		s.srv = &http.Server{
 			Addr:         s.config.NetAddress.String(),
-			Handler:      SetupRouter(userRepo), // TODO: fix
+			Handler:      SetupRouter(userRepo, sensitiveRecordRepo), // TODO: fix
 			TLSConfig:    s.tlsConfig(),
 			TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler), 0),
 		}

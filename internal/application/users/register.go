@@ -1,7 +1,6 @@
 package users
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -30,7 +29,7 @@ func (h UserHandlers) RegisterUser(c *gin.Context) {
 		return
 	}
 
-	if existed, err := h.repo.ExistUsername(context.TODO(), registerRequest.Username); err != nil {
+	if existed, err := h.repo.ExistUsername(registerRequest.Username); err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	} else if existed {
@@ -38,14 +37,14 @@ func (h UserHandlers) RegisterUser(c *gin.Context) {
 		return
 	}
 
-	cfg := internal.GetServerConfig()
+	cfg := internal.LoadServerConfig()
 	passwordHash, err := crypto.GenerateHash(registerRequest.Password, cfg.KeyLen, cfg.PasswordIterationNum)
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 
-	err = h.repo.RegisterUser(context.TODO(), registerRequest.Username, passwordHash)
+	err = h.repo.RegisterUser(registerRequest.Username, passwordHash)
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return

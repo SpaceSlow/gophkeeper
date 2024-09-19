@@ -1,7 +1,6 @@
 package users
 
 import (
-	"context"
 	"errors"
 	"net/http"
 
@@ -31,7 +30,7 @@ func (h UserHandlers) LoginUser(c *gin.Context) {
 		return
 	}
 
-	fetchedPasswordHash, err := h.repo.FetchPasswordHash(context.TODO(), loginRequest.Username)
+	fetchedPasswordHash, err := h.repo.FetchPasswordHash(loginRequest.Username)
 	var errNoUser *users.NoUserError
 	if errors.As(err, &errNoUser) {
 		c.JSON(http.StatusUnauthorized, LoginResponse{
@@ -43,7 +42,7 @@ func (h UserHandlers) LoginUser(c *gin.Context) {
 		return
 	}
 
-	cfg := internal.GetServerConfig()
+	cfg := internal.LoadServerConfig()
 	if isValid, err := crypto.IsValid(loginRequest.Password, fetchedPasswordHash, cfg.KeyLen); err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return

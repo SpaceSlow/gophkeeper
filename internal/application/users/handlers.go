@@ -1,12 +1,10 @@
 package users
 
-import "context"
-
 type Repository interface {
-	ExistUsername(ctx context.Context, username string) (bool, error)
-	RegisterUser(ctx context.Context, username, passwordHash string) error
-	FetchPasswordHash(ctx context.Context, username string) (string, error)
-	FetchUserID(ctx context.Context, username string) (int, error)
+	ExistUsername(username string) (bool, error)
+	RegisterUser(username, passwordHash string) error
+	FetchPasswordHash(username string) (string, error)
+	FetchUserID(username string) (int, error)
 	Close()
 }
 

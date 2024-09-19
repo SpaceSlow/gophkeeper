@@ -21,7 +21,7 @@ type ServerConfig struct {
 }
 
 var defaultConfig = &ServerConfig{
-	NetAddress:           netaddress.NetAddress{Port: 8080},
+	NetAddress:           netaddress.NetAddress{Port: 443},
 	CertificatePath:      os.Getenv("CERTIFICATE"),
 	PrivateKeyPath:       os.Getenv("PRIVATE_KEY"),
 	DSN:                  os.Getenv("DSN"),
@@ -35,7 +35,7 @@ var defaultConfig = &ServerConfig{
 var serverConfig *ServerConfig = nil
 var once sync.Once
 
-func GetServerConfig() *ServerConfig {
+func LoadServerConfig() *ServerConfig {
 	once.Do(func() {
 		serverConfig = defaultConfig
 	})

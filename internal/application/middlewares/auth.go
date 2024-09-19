@@ -1,7 +1,6 @@
 package middlewares
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -26,11 +25,11 @@ func isAuthenticated(c *gin.Context, r users.Repository) bool {
 	if err != nil {
 		return false
 	}
-	username, err := crypto.Username(jwt, internal.GetServerConfig().SecretKey)
+	username, err := crypto.Username(jwt, internal.LoadServerConfig().SecretKey)
 	if err != nil {
 		return false
 	}
-	isExisted, err := r.ExistUsername(context.TODO(), username)
+	isExisted, err := r.ExistUsername(username)
 	if err != nil || !isExisted {
 		return false
 	}
