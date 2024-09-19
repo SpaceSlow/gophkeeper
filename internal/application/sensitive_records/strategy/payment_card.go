@@ -1,4 +1,4 @@
-package sensitive_records
+package strategy
 
 import (
 	"fmt"

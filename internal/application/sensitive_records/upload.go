@@ -1,7 +1,6 @@
 package sensitive_records
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -23,20 +22,4 @@ func (h *SensitiveRecordHandlers) UploadSensitiveRecord(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": result})
-}
-
-func (h *SensitiveRecordHandlers) setStrategy(recordType string) error {
-	switch recordType {
-	case "text-file":
-		h.strategy = &TextFileStrategy{}
-	case "binary-file":
-		h.strategy = &BinaryFileStrategy{}
-	case "credentials":
-		h.strategy = &CredentialStrategy{}
-	case "payment-card":
-		h.strategy = &PaymentCardStrategy{}
-	default:
-		return fmt.Errorf("unknown sensitive record type: %s", recordType)
-	}
-	return nil
 }

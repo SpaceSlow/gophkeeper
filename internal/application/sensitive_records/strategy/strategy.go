@@ -1,8 +1,6 @@
-package sensitive_records
+package strategy
 
-import (
-	"github.com/gin-gonic/gin"
-)
+import "github.com/gin-gonic/gin"
 
 type SensitiveRecordStrategy interface {
 	Upload(c *gin.Context) (string, error)
