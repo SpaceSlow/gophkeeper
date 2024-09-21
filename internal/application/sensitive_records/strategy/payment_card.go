@@ -14,7 +14,6 @@ type PaymentCard struct {
 }
 
 type paymentCardRequest struct {
-	Preview  string      `json:"preview"`
 	Metadata string      `json:"metadata"`
 	Data     PaymentCard `json:"data"`
 }

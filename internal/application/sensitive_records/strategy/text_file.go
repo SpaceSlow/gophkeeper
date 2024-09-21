@@ -8,7 +8,6 @@ import (
 )
 
 type textFileRequest struct {
-	Preview  string                `form:"preview"`
 	Metadata string                `form:"metadata"`
 	Data     *multipart.FileHeader `form:"data"`
 }

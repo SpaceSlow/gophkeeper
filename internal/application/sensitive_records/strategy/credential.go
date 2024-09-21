@@ -12,7 +12,6 @@ type Credential struct {
 }
 
 type credentialRequest struct {
-	Preview  string     `json:"preview"`
 	Metadata string     `json:"metadata"`
 	Data     Credential `json:"data"`
 }
