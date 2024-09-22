@@ -5,8 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/SpaceSlow/gophkeeper/internal"
-	"github.com/SpaceSlow/gophkeeper/pkg/crypto"
+	"github.com/SpaceSlow/gophkeeper/internal/domain/users"
 )
 
 type RegisterRequest struct {
@@ -37,13 +36,13 @@ func (h UserHandlers) RegisterUser(c *gin.Context) {
 		return
 	}
 
-	cfg := internal.LoadServerConfig()
-	passwordHash, err := crypto.GenerateHash(registerRequest.Password, cfg.KeyLen, cfg.PasswordIterationNum)
+	user, err := users.CreateUser(registerRequest.Username, registerRequest.Password)
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 
+	passwordHash, err := user.GeneratePasswordHash(h.cfg.KeyLen(), h.cfg.PasswordIterationNum())
 	err = h.repo.RegisterUser(registerRequest.Username, passwordHash)
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)

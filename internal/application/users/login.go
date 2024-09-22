@@ -6,8 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/SpaceSlow/gophkeeper/internal"
-	"github.com/SpaceSlow/gophkeeper/internal/infrastructure/users"
+	"github.com/SpaceSlow/gophkeeper/internal/domain/users"
 	"github.com/SpaceSlow/gophkeeper/pkg/crypto"
 )
 
@@ -42,8 +41,13 @@ func (h UserHandlers) LoginUser(c *gin.Context) {
 		return
 	}
 
-	cfg := internal.LoadServerConfig()
-	if isValid, err := crypto.IsValid(loginRequest.Password, fetchedPasswordHash, cfg.KeyLen); err != nil {
+	user, err := users.CreateUser(loginRequest.Username, loginRequest.Password)
+	if err != nil {
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	if isValid, err := user.CheckPasswordHash(fetchedPasswordHash, h.cfg.KeyLen()); err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	} else if !isValid {
@@ -51,7 +55,7 @@ func (h UserHandlers) LoginUser(c *gin.Context) {
 		return
 	}
 
-	jwt, err := crypto.BuildJWT(loginRequest.Username, cfg.TokenLifetime, cfg.SecretKey)
+	jwt, err := crypto.BuildJWT(loginRequest.Username, h.cfg.TokenLifetime(), h.cfg.SecretKey())
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return

@@ -4,9 +4,11 @@ import (
 	"fmt"
 
 	"github.com/SpaceSlow/gophkeeper/internal/application/sensitive_records/strategy"
+	"github.com/SpaceSlow/gophkeeper/internal/domain/sensitive_records"
 )
 
 type Repository interface {
+	ListSensitiveRecordTypes() ([]sensitive_records.SensitiveRecordType, error)
 	UploadSensitiveRecord() (bool, error)
 	Close()
 }
@@ -24,8 +26,8 @@ func SetupHandlers(repo Repository) SensitiveRecordHandlers {
 
 func (h *SensitiveRecordHandlers) setStrategy(recordType string) error {
 	switch recordType {
-	case "text-file":
-		h.strategy = &strategy.TextFileStrategy{}
+	case "text":
+		h.strategy = &strategy.TextStrategy{}
 	case "binary-file":
 		h.strategy = &strategy.BinaryFileStrategy{}
 	case "credentials":

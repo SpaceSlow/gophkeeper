@@ -1,5 +1,7 @@
 package users
 
+import "time"
+
 type Repository interface {
 	ExistUsername(username string) (bool, error)
 	RegisterUser(username, passwordHash string) error
@@ -8,12 +10,21 @@ type Repository interface {
 	Close()
 }
 
-type UserHandlers struct {
-	repo Repository
+type ConfigProvider interface {
+	SecretKey() string
+	KeyLen() int
+	PasswordIterationNum() int
+	TokenLifetime() time.Duration
 }
 
-func SetupHandlers(repo Repository) UserHandlers {
+type UserHandlers struct {
+	repo Repository
+	cfg  ConfigProvider
+}
+
+func SetupHandlers(repo Repository, cfg ConfigProvider) UserHandlers {
 	return UserHandlers{
 		repo: repo,
+		cfg:  cfg,
 	}
 }

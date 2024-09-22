@@ -6,6 +6,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func (h *SensitiveRecordHandlers) CreateSensitiveRecord(c *gin.Context, params interface{}) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (h *SensitiveRecordHandlers) CreateSensitiveRecordDataWithID(c *gin.Context, id int) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (h *SensitiveRecordHandlers) UploadSensitiveRecord(c *gin.Context) {
 	recordType := c.Query("type")
 

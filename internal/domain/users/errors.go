@@ -1,6 +1,11 @@
 package users
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
+
+var ErrUserValidation = errors.New("validation error")
 
 type NoUserError struct {
 	Username string

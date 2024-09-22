@@ -7,6 +7,8 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/SpaceSlow/gophkeeper/internal/domain/users"
 )
 
 type PostgresRepo struct {
@@ -56,7 +58,7 @@ func (r *PostgresRepo) FetchPasswordHash(username string) (string, error) {
 	var hash string
 	err := row.Scan(&hash)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return "", &NoUserError{Username: username}
+		return "", &users.NoUserError{Username: username}
 	} else if err != nil {
 		return "", err
 	}
@@ -73,7 +75,7 @@ func (r *PostgresRepo) FetchUserID(username string) (int, error) {
 	var userID int
 	err := row.Scan(&userID)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return -1, &NoUserError{Username: username}
+		return -1, &users.NoUserError{Username: username}
 	} else if err != nil {
 		return -1, err
 	}

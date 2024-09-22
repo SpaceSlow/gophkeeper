@@ -20,6 +20,7 @@ paths:
         - users
       summary: Register user
       description: Register user in the GophKeeper via username and password
+      operationId: RegisterUser
       requestBody:
         required: true
         content:
@@ -49,6 +50,7 @@ paths:
         - users
       summary: Login user
       description: Login user in the GophKeeper via username and password
+      operationId: PostLogin
       requestBody:
         required: true
         content:
@@ -88,6 +90,7 @@ paths:
         - sensitive records
       summary: Returns sensitive record types
       description: Returns a array of sensitive record types
+      operationId: ListSensitiveRecordTypes
       responses:
         '200':
           description: Successful operation
@@ -103,6 +106,7 @@ paths:
         - sensitive records
       summary: Create file of sensitive record
       description: Upload file of sensitive record on the server and return hash
+      operationId: UploadFile
       requestBody:
         content:
           application/octet-stream:
@@ -138,6 +142,7 @@ paths:
         - sensitive records
       summary: Get file of sensitive record
       description: Get stored file of sensitive record with current hash
+      operationId: DownloadFile
       parameters:
         - name: hash
           in: path
@@ -176,6 +181,7 @@ paths:
         - sensitive records
       summary: Create a new sensitive record
       description: Place a new sensitive record in the GophKeeper
+      operationId: PostSensitiveRecord
       parameters:
         - name: type
           description: sensitive record type in string
@@ -221,6 +227,7 @@ paths:
         - sensitive records
       summary: Returns sensitive records
       description: Returns a array of sensitive records of current user
+      operationId: ListSensitiveRecords
       responses:
         '200':
           description: Successful operation
@@ -244,6 +251,7 @@ paths:
         - sensitive records
       summary: Create data for sensitive record with {id}
       description: Create data of sensitive record with {id}
+      operationId: CreateSensitiveRecordDataWithID
       parameters:
         - name: id
           in: path
@@ -285,6 +293,7 @@ paths:
         - sensitive records
       summary: Returns data for sensitive record with {id}
       description: Return data of sensitive record with {id}
+      operationId: SensitiveRecordDataWithID
       parameters:
         - name: id
           in: path
@@ -319,6 +328,7 @@ paths:
         - sensitive records
       summary: Delete sensitive record with {id}
       description: Delete all data of sensitive record with {id}
+      operationId: DeleteSensitiveRecordWithID
       parameters:
         - name: id
           in: path
