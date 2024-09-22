@@ -1,0 +1,514 @@
+openapi: 3.0.3
+info:
+  title: Swagger GophKeeper - OpenAPI 3.0
+  contact:
+    email: igor.ivanov.it@mail.ru
+  license:
+    name: For education
+  version: 1.0.0
+servers:
+  - url: https://localhost/api
+tags:
+  - name: users
+    description: Operations about user
+  - name: sensitive records
+    description: Operations with sensitive records
+paths:
+  /register:
+    post:
+      tags:
+        - users
+      summary: Register user
+      description: Register user in the GophKeeper via username and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterUserRequest'
+      responses:
+        '200':
+          description: Successful registered
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Existed username
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal error on server
+  /login:
+    post:
+      tags:
+        - users
+      summary: Login user
+      description: Login user in the GophKeeper via username and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginUserRequest'
+      responses:
+        '200':
+          description: Successful operation
+          headers:
+            X-Expires-After:
+              description: date in UTC when token expires
+              schema:
+                type: string
+                format: date-time
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginUserResponse'
+        '400':
+          description: Invalid username/password supplied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Incorrect password or username doesn't exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal error on server
+  /sensitive_record_types:
+    get:
+      tags:
+        - sensitive records
+      summary: Returns sensitive record types
+      description: Returns a array of sensitive record types
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListSensitiveRecordTypeResponse'
+        '500':
+          description: Internal error on server
+  /sensitive_records/files:
+    post:
+      tags:
+        - sensitive records
+      summary: Create file of sensitive record
+      description: Upload file of sensitive record on the server and return hash
+      requestBody:
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '201':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateFileResponse'
+        '400':
+          description: Invalid data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No authentication token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal error on server
+      security:
+        - auth: []
+  /sensitive_records/files/{hash}:
+    get:
+      tags:
+        - sensitive records
+      summary: Get file of sensitive record
+      description: Get stored file of sensitive record with current hash
+      parameters:
+        - name: hash
+          in: path
+          required: true
+          schema:
+            type: string
+            format: hex
+            example: 456b198c271ff4453ffab50b3d4cbe541c3d4558683634f99a266f53b8f78d71
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Invalid data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No authentication token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal error on server
+      security:
+        - auth: []
+  /sensitive_records:
+    post:
+      tags:
+        - sensitive records
+      summary: Create a new sensitive record
+      description: Place a new sensitive record in the GophKeeper
+      parameters:
+        - name: type
+          description: sensitive record type in string
+          in: query
+          schema:
+            $ref: '#/components/schemas/SensitiveRecordTypeEnum'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSensitiveRecordRequest'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateSensitiveRecordResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No authentication token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation exception
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal error on server
+      security:
+        - auth: []
+    get:
+      tags:
+        - sensitive records
+      summary: Returns sensitive records
+      description: Returns a array of sensitive records of current user
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListSensitiveRecordResponse'
+        '401':
+          description: No authentication token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal error on server
+      security:
+        - auth: []
+  /sensitive_records/{id}:
+    post:
+      tags:
+        - sensitive records
+      summary: Create data for sensitive record with {id}
+      description: Create data of sensitive record with {id}
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSensitiveRecordDataRequest'
+      responses:
+        '200':
+          description: Successful operation
+        '400':
+          description: Invalid data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No authentication token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: No sensitive record with current id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal error on server
+      security:
+        - auth: []
+    get:
+      tags:
+        - sensitive records
+      summary: Returns data for sensitive record with {id}
+      description: Return data of sensitive record with {id}
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateSensitiveRecordDataResponse'
+        '401':
+          description: No authentication token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: No sensitive record with current id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal error on server
+      security:
+        - auth: []
+    delete:
+      tags:
+        - sensitive records
+      summary: Delete sensitive record with {id}
+      description: Delete all data of sensitive record with {id}
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Successful operation
+        '401':
+          description: No authentication token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal error on server
+      security:
+        - auth: []
+components:
+  schemas:
+    # requests/responses
+    RegisterUserRequest:
+      type: object
+      required:
+        - username
+        - password
+        - repeated_password
+      properties:
+        username:
+          type: string
+          example: username1
+        password:
+          type: string
+          example: password1
+        repeated_password:
+          type: string
+          example: password1
+    LoginUserRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          example: username1
+        password:
+          type: string
+          example: password1
+    LoginUserResponse:
+      type: object
+      required:
+        - token
+      properties:
+        token:
+          type: string
+    ListSensitiveRecordTypeResponse:
+      type: object
+      required:
+        - sensitive_record_types
+      properties:
+        sensitive_record_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/SensitiveRecordType'
+    ListSensitiveRecordResponse:
+      type: object
+      required:
+        - sensitive_records
+      properties:
+        sensitive_records:
+          type: array
+          items:
+            $ref: '#/components/schemas/SensitiveRecord'
+    CreateSensitiveRecordRequest:
+      type: object
+      required:
+        - metadata
+      properties:
+        metadata:
+          type: string
+          example: some information about sensitive record
+    CreateSensitiveRecordResponse:
+      $ref: '#/components/schemas/SensitiveRecord'
+    CreateSensitiveRecordDataRequest:
+      oneOf:
+        - $ref: '#/components/schemas/Credential'
+        - $ref: '#/components/schemas/PaymentCard'
+        - $ref: '#/components/schemas/BinaryFile'
+        - $ref: '#/components/schemas/Text'
+    CreateSensitiveRecordDataResponse:
+      $ref: '#/components/schemas/CreateSensitiveRecordDataRequest'
+    CreateFileResponse:
+      $ref: '#/components/schemas/BinaryFile'
+    ErrorResponse:
+      type: object
+      required:
+        - errors
+      properties:
+        errors:
+          type: string
+          description: errors must split by \r symbol
+    # models
+    SensitiveRecordType:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          $ref: '#/components/schemas/SensitiveRecordTypeEnum'
+    SensitiveRecord:
+      type: object
+      required:
+        - id
+        - metadata
+        - sensitive_record_type_id
+      properties:
+        id:
+          type: integer
+          example: 10
+        metadata:
+          type: string
+          example: some information about sensitive record
+        sensitive_record_type_id:
+          type: integer
+          example: 1
+    PaymentCard:
+      type: object
+      required:
+        - number
+        - expire_date
+        - cardholder
+        - code
+      properties:
+        number:
+          type: string
+          example: 1234123412341234
+        expire_date:
+          type: string
+          example: 12/12
+        cardholder:
+          type: string
+          example: IVAN IVANOV
+        code:
+          type: string
+          example: 123
+    BinaryFile:
+      type: object
+      required:
+        - hash
+      properties:
+        hash:
+          type: string
+          example: 456b198c271ff4453ffab50b3d4cbe541c3d4558683634f99a266f53b8f78d71
+    Text:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: string
+          example: some text
+    Credential:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          example: username1
+        password:
+          type: string
+          example: password1
+    # Enums and etc
+    SensitiveRecordTypeEnum:
+      type: string
+      enum:
+        - payment-card
+        - text
+        - binary-file
+        - credential
+  # security schemes
+  securitySchemes:
+    auth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
