@@ -6,33 +6,24 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/SpaceSlow/gophkeeper/generated/openapi"
 	"github.com/SpaceSlow/gophkeeper/internal/domain/users"
 	"github.com/SpaceSlow/gophkeeper/pkg/crypto"
 )
 
-type LoginRequest struct {
-	Username string `json:"username" binding:"required,min=8"`
-	Password string `json:"password" binding:"required,min=8"`
-}
-
-type LoginResponse struct {
-	Token  string `json:"token"`
-	Errors string `json:"errors"`
-}
-
 func (h UserHandlers) LoginUser(c *gin.Context) {
-	var loginRequest LoginRequest
-	if err := c.ShouldBindJSON(&loginRequest); err != nil {
-		c.JSON(http.StatusBadRequest, LoginResponse{
+	var req openapi.LoginUserRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, openapi.ErrorResponse{
 			Errors: err.Error(), // TODO: error handling
 		})
 		return
 	}
 
-	fetchedPasswordHash, err := h.repo.FetchPasswordHash(loginRequest.Username)
+	fetchedPasswordHash, err := h.repo.FetchPasswordHash(req.Username)
 	var errNoUser *users.NoUserError
 	if errors.As(err, &errNoUser) {
-		c.JSON(http.StatusUnauthorized, LoginResponse{
+		c.JSON(http.StatusUnauthorized, openapi.ErrorResponse{
 			Errors: errNoUser.Error(),
 		})
 		return
@@ -41,9 +32,11 @@ func (h UserHandlers) LoginUser(c *gin.Context) {
 		return
 	}
 
-	user, err := users.CreateUser(loginRequest.Username, loginRequest.Password)
+	user, err := users.CreateUser(req.Username, req.Password)
 	if err != nil {
-		c.AbortWithStatus(http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, openapi.ErrorResponse{
+			Errors: err.Error(),
+		})
 		return
 	}
 
@@ -51,17 +44,19 @@ func (h UserHandlers) LoginUser(c *gin.Context) {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	} else if !isValid {
-		c.AbortWithStatus(http.StatusUnauthorized)
+		c.JSON(http.StatusUnauthorized, openapi.ErrorResponse{
+			Errors: users.ErrUserLogin.Error(),
+		})
 		return
 	}
 
-	jwt, err := crypto.BuildJWT(loginRequest.Username, h.cfg.TokenLifetime(), h.cfg.SecretKey())
+	jwt, err := crypto.BuildJWT(req.Username, h.cfg.TokenLifetime(), h.cfg.SecretKey())
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 
-	c.JSON(http.StatusOK, LoginResponse{
+	c.JSON(http.StatusOK, openapi.LoginUserResponse{
 		Token: jwt,
 	})
 }

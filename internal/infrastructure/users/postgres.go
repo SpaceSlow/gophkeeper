@@ -58,7 +58,7 @@ func (r *PostgresRepo) FetchPasswordHash(username string) (string, error) {
 	var hash string
 	err := row.Scan(&hash)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return "", &users.NoUserError{Username: username}
+		return "", users.NewNoUserError(username)
 	} else if err != nil {
 		return "", err
 	}
@@ -75,7 +75,7 @@ func (r *PostgresRepo) FetchUserID(username string) (int, error) {
 	var userID int
 	err := row.Scan(&userID)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return -1, &users.NoUserError{Username: username}
+		return -1, users.NewNoUserError(username)
 	} else if err != nil {
 		return -1, err
 	}
