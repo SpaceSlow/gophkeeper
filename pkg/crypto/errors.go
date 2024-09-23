@@ -8,6 +8,7 @@ import (
 var ErrInvalidAuthorizationHeader = errors.New("invalid authorization header")
 var ErrInvalidToken = errors.New("token is not valid")
 var ErrInvalidPasswordHash = errors.New("invalid password hash layout")
+var ErrNoUserID = errors.New("no user id")
 
 type UnknownHashAlgError struct {
 	Alg string

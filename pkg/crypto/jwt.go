@@ -41,7 +41,7 @@ func ExtractToken(c *gin.Context) (string, error) {
 	return parts[1], nil
 }
 
-func UserID(tokenString, secretKey string) (int, error) {
+func UserIDFromToken(tokenString, secretKey string) (int, error) {
 	claims := &UsernameClaims{}
 	token, err := jwt.ParseWithClaims(
 		tokenString,

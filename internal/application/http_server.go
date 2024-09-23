@@ -27,7 +27,7 @@ func SetupHTTPServer(userRepo UserRepository, sensitiveRecordRepo SensitiveRecor
 	protected := router.Group("/api")
 	public.GET("/sensitive_record_types", server.ListSensitiveRecordTypes)
 	protected.Use(crypto.AuthMiddleware(userRepo, cfg))
-	protected.POST("/sensitive_records", server.UploadSensitiveRecord)
+	protected.POST("/sensitive_records", server.PostSensitiveRecord)
 
 	return router
 }

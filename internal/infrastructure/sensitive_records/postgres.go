@@ -2,9 +2,7 @@ package sensitive_records
 
 import (
 	"context"
-	"errors"
 	"fmt"
-
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/SpaceSlow/gophkeeper/internal/domain/sensitive_records"
@@ -26,8 +24,21 @@ func NewPostgresRepo(ctx context.Context, dsn string) (*PostgresRepo, error) {
 	}, nil
 }
 
-func (r *PostgresRepo) UploadSensitiveRecord() (bool, error) {
-	return false, errors.New("not implemented")
+func (r *PostgresRepo) CreateSensitiveRecord(record *sensitive_records.SensitiveRecord) (*sensitive_records.SensitiveRecord, error) {
+	row := r.pool.QueryRow(
+		r.ctx,
+		`INSERT INTO sensitive_records (user_id, sensitive_record_type_id, metadata) VALUES ($1, $2, $3) RETURNING id`,
+		record.UserID(), record.TypeID(), record.Metadata(),
+	)
+	var id int
+	if err := row.Scan(&id); err != nil {
+		return nil, err
+	}
+	newRecord, err := sensitive_records.NewSensitiveRecord(id, record.UserID(), record.TypeID(), record.Metadata())
+	if err != nil {
+		return nil, err
+	}
+	return newRecord, nil
 }
 
 func (r *PostgresRepo) ListSensitiveRecordTypes() ([]sensitive_records.SensitiveRecordType, error) {

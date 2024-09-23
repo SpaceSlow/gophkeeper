@@ -29,7 +29,7 @@ func isAuthenticated(c *gin.Context, r Repository, cfg Config) bool {
 	if err != nil {
 		return false
 	}
-	userID, err := UserID(jwt, cfg.SecretKey())
+	userID, err := UserIDFromToken(jwt, cfg.SecretKey())
 	if err != nil {
 		return false
 	}
@@ -37,5 +37,18 @@ func isAuthenticated(c *gin.Context, r Repository, cfg Config) bool {
 	if err != nil || !isExisted {
 		return false
 	}
+	c.Set("userID", userID)
 	return true
+}
+
+func UserID(c *gin.Context) (int, error) {
+	value, exist := c.Get("userID")
+	if !exist {
+		return 0, ErrNoUserID
+	}
+	userID, ok := value.(int)
+	if !ok {
+		return 0, ErrNoUserID
+	}
+	return userID, nil
 }
