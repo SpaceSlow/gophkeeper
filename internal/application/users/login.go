@@ -51,13 +51,13 @@ func (h UserHandlers) LoginUser(c *gin.Context) {
 		return
 	}
 
-	c.Header("X-Expires-After", time.Now().Add(h.cfg.TokenLifetime()).UTC().String())
 	jwt, err := crypto.BuildJWT(req.Username, h.cfg.TokenLifetime(), h.cfg.SecretKey())
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 
+	c.Header("X-Expires-After", time.Now().Add(h.cfg.TokenLifetime()).UTC().String())
 	c.JSON(http.StatusOK, openapi.LoginUserResponse{
 		Token: jwt,
 	})
