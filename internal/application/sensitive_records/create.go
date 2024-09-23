@@ -40,7 +40,7 @@ func (h *SensitiveRecordHandlers) PostSensitiveRecord(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, openapi.CreateSensitiveRecordResponse{
+	c.JSON(http.StatusCreated, openapi.CreateSensitiveRecordResponse{
 		Id:                    sensitiveRecord.Id(),
 		Metadata:              sensitiveRecord.Metadata(),
 		SensitiveRecordTypeId: sensitiveRecord.TypeID(),
