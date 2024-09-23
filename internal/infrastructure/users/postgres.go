@@ -40,6 +40,19 @@ func (r *PostgresRepo) ExistUsername(username string) (bool, error) {
 	return existUsername, nil
 }
 
+func (r *PostgresRepo) ExistUser(userID int) (bool, error) {
+	row := r.pool.QueryRow(
+		r.ctx,
+		`SELECT EXISTS(SELECT id FROM users WHERE id=$1)`,
+		userID,
+	)
+	var existUsername bool
+	if err := row.Scan(&existUsername); err != nil {
+		return false, fmt.Errorf("failed to check existing username: %w", err)
+	}
+	return existUsername, nil
+}
+
 func (r *PostgresRepo) RegisterUser(username, passwordHash string) error {
 	_, err := r.pool.Exec(
 		r.ctx,
@@ -48,38 +61,24 @@ func (r *PostgresRepo) RegisterUser(username, passwordHash string) error {
 	)
 	return err
 }
-func (r *PostgresRepo) FetchPasswordHash(username string) (string, error) {
+func (r *PostgresRepo) FetchUser(username string) (*users.User, error) {
 	row := r.pool.QueryRow(
 		r.ctx,
-		"SELECT password_hash FROM users WHERE username=$1",
+		"SELECT id, password_hash FROM users WHERE username=$1",
 		username,
 	)
 
-	var hash string
-	err := row.Scan(&hash)
-	if errors.Is(err, pgx.ErrNoRows) {
-		return "", users.NewNoUserError(username)
-	} else if err != nil {
-		return "", err
-	}
-	return hash, nil
-}
-
-func (r *PostgresRepo) FetchUserID(username string) (int, error) {
-	row := r.pool.QueryRow(
-		r.ctx,
-		"SELECT id FROM users WHERE username=$1",
-		username,
+	var (
+		id   int
+		hash string
 	)
-
-	var userID int
-	err := row.Scan(&userID)
+	err := row.Scan(&id, &hash)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return -1, users.NewNoUserError(username)
+		return nil, users.NewNoUserError(username)
 	} else if err != nil {
-		return -1, err
+		return nil, err
 	}
-	return userID, nil
+	return users.NewUserWithHash(id, username, hash)
 }
 
 func (r *PostgresRepo) Close() {

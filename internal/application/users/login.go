@@ -21,7 +21,7 @@ func (h UserHandlers) LoginUser(c *gin.Context) {
 		return
 	}
 
-	fetchedPasswordHash, err := h.repo.FetchPasswordHash(req.Username)
+	user, err := h.repo.FetchUser(req.Username)
 	var errNoUser users.NoUserError
 	if errors.As(err, &errNoUser) {
 		c.JSON(http.StatusUnauthorized, openapi.ErrorResponse{
@@ -33,15 +33,7 @@ func (h UserHandlers) LoginUser(c *gin.Context) {
 		return
 	}
 
-	user, err := users.CreateUser(req.Username, req.Password)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, openapi.ErrorResponse{
-			Errors: err.Error(),
-		})
-		return
-	}
-
-	if isValid, err := user.CheckPasswordHash(fetchedPasswordHash, h.cfg.KeyLen()); err != nil {
+	if isValid, err := user.CheckPasswordHash(req.Password, h.cfg.KeyLen()); err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	} else if !isValid {
@@ -51,7 +43,7 @@ func (h UserHandlers) LoginUser(c *gin.Context) {
 		return
 	}
 
-	jwt, err := crypto.BuildJWT(req.Username, h.cfg.TokenLifetime(), h.cfg.SecretKey())
+	jwt, err := crypto.BuildJWT(user.Id(), h.cfg.TokenLifetime(), h.cfg.SecretKey())
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return

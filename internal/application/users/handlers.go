@@ -1,12 +1,16 @@
 package users
 
-import "time"
+import (
+	"time"
+
+	"github.com/SpaceSlow/gophkeeper/internal/domain/users"
+)
 
 type Repository interface {
 	ExistUsername(username string) (bool, error)
 	RegisterUser(username, passwordHash string) error
-	FetchPasswordHash(username string) (string, error)
-	FetchUserID(username string) (int, error)
+	FetchUser(username string) (*users.User, error)
+	ExistUser(userID int) (bool, error)
 	Close()
 }
 

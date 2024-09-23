@@ -10,15 +10,15 @@ import (
 
 type UsernameClaims struct {
 	jwt.RegisteredClaims
-	Username string
+	UserID int
 }
 
-func BuildJWT(username string, tokenLifetime time.Duration, secretKey string) (string, error) {
+func BuildJWT(userID int, tokenLifetime time.Duration, secretKey string) (string, error) {
 	t := jwt.NewWithClaims(jwt.SigningMethodHS256, UsernameClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(tokenLifetime)),
 		},
-		Username: username,
+		UserID: userID,
 	})
 
 	jwt, err := t.SignedString([]byte(secretKey))
@@ -41,7 +41,7 @@ func ExtractToken(c *gin.Context) (string, error) {
 	return parts[1], nil
 }
 
-func Username(tokenString, secretKey string) (string, error) {
+func UserID(tokenString, secretKey string) (int, error) {
 	claims := &UsernameClaims{}
 	token, err := jwt.ParseWithClaims(
 		tokenString,
@@ -52,12 +52,12 @@ func Username(tokenString, secretKey string) (string, error) {
 		jwt.WithValidMethods([]string{"HS256"}),
 	)
 	if err != nil {
-		return "", err
+		return 0, err
 	}
 
 	if !token.Valid {
-		return "", ErrInvalidToken
+		return 0, ErrInvalidToken
 	}
 
-	return claims.Username, nil
+	return claims.UserID, nil
 }

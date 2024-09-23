@@ -11,7 +11,7 @@ type Config interface {
 }
 
 type Repository interface {
-	ExistUsername(username string) (bool, error)
+	ExistUser(userID int) (bool, error)
 }
 
 func AuthMiddleware(r Repository, cfg Config) gin.HandlerFunc {
@@ -29,11 +29,11 @@ func isAuthenticated(c *gin.Context, r Repository, cfg Config) bool {
 	if err != nil {
 		return false
 	}
-	username, err := Username(jwt, cfg.SecretKey())
+	userID, err := UserID(jwt, cfg.SecretKey())
 	if err != nil {
 		return false
 	}
-	isExisted, err := r.ExistUsername(username)
+	isExisted, err := r.ExistUser(userID)
 	if err != nil || !isExisted {
 		return false
 	}
