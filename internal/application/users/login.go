@@ -3,6 +3,7 @@ package users
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -21,7 +22,7 @@ func (h UserHandlers) LoginUser(c *gin.Context) {
 	}
 
 	fetchedPasswordHash, err := h.repo.FetchPasswordHash(req.Username)
-	var errNoUser *users.NoUserError
+	var errNoUser users.NoUserError
 	if errors.As(err, &errNoUser) {
 		c.JSON(http.StatusUnauthorized, openapi.ErrorResponse{
 			Errors: errNoUser.Error(),
@@ -50,6 +51,7 @@ func (h UserHandlers) LoginUser(c *gin.Context) {
 		return
 	}
 
+	c.Header("X-Expires-After", time.Now().Add(h.cfg.TokenLifetime()).UTC().String())
 	jwt, err := crypto.BuildJWT(req.Username, h.cfg.TokenLifetime(), h.cfg.SecretKey())
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
