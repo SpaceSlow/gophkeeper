@@ -3,13 +3,9 @@ package sensitive_records
 import (
 	"net/http"
 
+	"github.com/SpaceSlow/gophkeeper/generated/openapi"
 	"github.com/gin-gonic/gin"
 )
-
-type sensitiveRecordType struct {
-	Id   int    `json:"id"`
-	Name string `json:"name"`
-}
 
 func (h *SensitiveRecordHandlers) ListSensitiveRecordTypes(c *gin.Context) {
 	result, err := h.repo.ListSensitiveRecordTypes()
@@ -17,12 +13,12 @@ func (h *SensitiveRecordHandlers) ListSensitiveRecordTypes(c *gin.Context) {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
-	types := make([]sensitiveRecordType, 0, len(result))
+	types := make([]openapi.SensitiveRecordType, 0, len(result))
 	for _, t := range result {
-		types = append(types, sensitiveRecordType{Id: t.Id(), Name: t.Name()})
+		types = append(types, openapi.SensitiveRecordType{Id: t.Id(), Name: openapi.SensitiveRecordTypeEnum(t.Name())})
 	}
 
-	c.JSON(http.StatusOK, types)
+	c.JSON(http.StatusOK, openapi.ListSensitiveRecordTypeResponse{SensitiveRecordTypes: types})
 }
 
 func (h *SensitiveRecordHandlers) ListSensitiveRecords(c *gin.Context) {
