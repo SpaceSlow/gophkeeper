@@ -21,7 +21,7 @@ func NewFilesystemRepo(dir string) (*FilesystemRepo, error) {
 	return &FilesystemRepo{dir: dir}, nil
 }
 
-func (r *FilesystemRepo) CreateBinaryFile(userID int, reader io.Reader) (uuid.UUID, error) {
+func (r *FilesystemRepo) CreateFile(userID int, reader io.Reader) (uuid.UUID, error) {
 	var id uuid.UUID
 	for id = uuid.New(); r.isExist(r.path(userID, id)); id = uuid.New() {
 	}

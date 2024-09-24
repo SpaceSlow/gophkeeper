@@ -12,7 +12,7 @@ import (
 type SensitiveRecordRepository interface {
 	ListSensitiveRecordTypes() ([]sensitive_records.SensitiveRecordType, error)
 	CreateSensitiveRecord(sensitiveRecord *sensitive_records.SensitiveRecord) (*sensitive_records.SensitiveRecord, error)
-	CreateBinaryFile(userID int, reader io.Reader) (uuid.UUID, error)
+	CreateFile(userID int, reader io.Reader) (uuid.UUID, error)
 	Close()
 }
 
