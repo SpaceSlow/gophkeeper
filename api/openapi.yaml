@@ -105,7 +105,7 @@ paths:
       tags:
         - sensitive records
       summary: Create file of sensitive record
-      description: Upload file of sensitive record on the server and return hash
+      description: Upload file of sensitive record on the server and return uuid
       operationId: UploadFile
       requestBody:
         content:
@@ -136,21 +136,21 @@ paths:
           description: Internal error on server
       security:
         - auth: []
-  /sensitive_records/files/{hash}:
+  /sensitive_records/files/{uuid}:
     get:
       tags:
         - sensitive records
       summary: Get file of sensitive record
-      description: Get stored file of sensitive record with current hash
+      description: Get stored file of sensitive record with current uuid
       operationId: DownloadFile
       parameters:
-        - name: hash
+        - name: uuid
           in: path
           required: true
           schema:
             type: string
-            format: hex
-            example: 456b198c271ff4453ffab50b3d4cbe541c3d4558683634f99a266f53b8f78d71
+            format: uuid
+            example: cb73828b-3b85-4ae8-a875-c67d1bb7ac06
       responses:
         '200':
           description: Successful operation
@@ -483,11 +483,12 @@ components:
     BinaryFile:
       type: object
       required:
-        - hash
+        - uuid
       properties:
-        hash:
+        uuid:
           type: string
-          example: 456b198c271ff4453ffab50b3d4cbe541c3d4558683634f99a266f53b8f78d71
+          format: uuid
+          example: cb73828b-3b85-4ae8-a875-c67d1bb7ac06
     Text:
       type: object
       required:

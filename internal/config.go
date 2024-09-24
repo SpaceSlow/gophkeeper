@@ -14,6 +14,7 @@ type ServerConfig struct {
 	PrivateKeyPath       string
 	DSN                  string
 	secretKey            string
+	SensitiveRecordsDir  string
 	keyLen               int
 	passwordIterationNum int
 	tokenLifetime        time.Duration
@@ -37,10 +38,11 @@ func (c *ServerConfig) TokenLifetime() time.Duration {
 }
 
 var defaultConfig = &ServerConfig{
-	NetAddress:           netaddress.NetAddress{Port: 443},
+	NetAddress:           netaddress.NetAddress{Port: 8080},
 	CertificatePath:      os.Getenv("CERTIFICATE"),
 	PrivateKeyPath:       os.Getenv("PRIVATE_KEY"),
 	DSN:                  os.Getenv("DSN"),
+	SensitiveRecordsDir:  os.Getenv("SENSITIVE_RECORDS_DIR"),
 	secretKey:            os.Getenv("SECRET_KEY"),
 	tokenLifetime:        time.Hour,
 	keyLen:               32,

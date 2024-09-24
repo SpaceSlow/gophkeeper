@@ -50,7 +50,7 @@ func Run() error {
 	})
 
 	// start sensitive record repository
-	sensitiveRecordRepo, err := sensitive_records.NewPostgresRepo(ctx, cfg.DSN)
+	sensitiveRecordRepo, err := sensitive_records.NewFilesystemPostgresRepo(ctx, cfg.DSN, cfg.SensitiveRecordsDir)
 	if err != nil {
 		return fmt.Errorf("failed to initialize a sensitive record repo: %w", err)
 	}
