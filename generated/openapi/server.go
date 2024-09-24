@@ -9,6 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/oapi-codegen/runtime"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
 // ServerInterface represents all server handlers.
@@ -32,8 +33,8 @@ type ServerInterface interface {
 	// (POST /sensitive_records/files)
 	UploadFile(c *gin.Context)
 	// Get file of sensitive record
-	// (GET /sensitive_records/files/{hash})
-	DownloadFile(c *gin.Context, hash string)
+	// (GET /sensitive_records/files/{uuid})
+	DownloadFile(c *gin.Context, uuid openapi_types.UUID)
 	// Delete sensitive record with {id}
 	// (DELETE /sensitive_records/{id})
 	DeleteSensitiveRecordWithID(c *gin.Context, id int)
@@ -156,12 +157,12 @@ func (siw *ServerInterfaceWrapper) DownloadFile(c *gin.Context) {
 
 	var err error
 
-	// ------------- Path parameter "hash" -------------
-	var hash string
+	// ------------- Path parameter "uuid" -------------
+	var uuid openapi_types.UUID
 
-	err = runtime.BindStyledParameterWithOptions("simple", "hash", c.Param("hash"), &hash, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	err = runtime.BindStyledParameterWithOptions("simple", "uuid", c.Param("uuid"), &uuid, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {
-		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter hash: %w", err), http.StatusBadRequest)
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter uuid: %w", err), http.StatusBadRequest)
 		return
 	}
 
@@ -174,7 +175,7 @@ func (siw *ServerInterfaceWrapper) DownloadFile(c *gin.Context) {
 		}
 	}
 
-	siw.Handler.DownloadFile(c, hash)
+	siw.Handler.DownloadFile(c, uuid)
 }
 
 // DeleteSensitiveRecordWithID operation middleware
@@ -288,7 +289,7 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.GET(options.BaseURL+"/sensitive_records", wrapper.ListSensitiveRecords)
 	router.POST(options.BaseURL+"/sensitive_records", wrapper.PostSensitiveRecord)
 	router.POST(options.BaseURL+"/sensitive_records/files", wrapper.UploadFile)
-	router.GET(options.BaseURL+"/sensitive_records/files/:hash", wrapper.DownloadFile)
+	router.GET(options.BaseURL+"/sensitive_records/files/:uuid", wrapper.DownloadFile)
 	router.DELETE(options.BaseURL+"/sensitive_records/:id", wrapper.DeleteSensitiveRecordWithID)
 	router.GET(options.BaseURL+"/sensitive_records/:id", wrapper.SensitiveRecordDataWithID)
 	router.POST(options.BaseURL+"/sensitive_records/:id", wrapper.CreateSensitiveRecordDataWithID)

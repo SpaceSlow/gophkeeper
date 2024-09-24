@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 
 	"github.com/oapi-codegen/runtime"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
 const (
@@ -23,7 +24,7 @@ const (
 
 // BinaryFile defines model for BinaryFile.
 type BinaryFile struct {
-	Hash string `json:"hash"`
+	Uuid openapi_types.UUID `json:"uuid"`
 }
 
 // CreateFileResponse defines model for CreateFileResponse.

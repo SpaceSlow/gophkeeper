@@ -15,7 +15,7 @@ type FilesystemRepo struct {
 }
 
 func NewFilesystemRepo(dir string) (*FilesystemRepo, error) {
-	if err := os.Mkdir(dir, 644); err != nil && !errors.Is(err, os.ErrExist) {
+	if err := os.Mkdir(dir, 0744); err != nil && !errors.Is(err, os.ErrExist) {
 		return nil, err
 	}
 	return &FilesystemRepo{dir: dir}, nil
@@ -25,7 +25,7 @@ func (r *FilesystemRepo) CreateFile(userID int, reader io.Reader) (uuid.UUID, er
 	var id uuid.UUID
 	for id = uuid.New(); r.isExist(r.filepath(userID, id)); id = uuid.New() {
 	}
-	err := os.MkdirAll(r.userDir(userID), 0666)
+	err := os.MkdirAll(r.userDir(userID), 0744)
 	if err != nil {
 		return uuid.Nil, err
 	}

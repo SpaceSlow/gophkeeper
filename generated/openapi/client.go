@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/oapi-codegen/runtime"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
@@ -114,7 +115,7 @@ type ClientInterface interface {
 	UploadFileWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// DownloadFile request
-	DownloadFile(ctx context.Context, hash string, reqEditors ...RequestEditorFn) (*http.Response, error)
+	DownloadFile(ctx context.Context, uuid openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// DeleteSensitiveRecordWithID request
 	DeleteSensitiveRecordWithID(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -236,8 +237,8 @@ func (c *Client) UploadFileWithBody(ctx context.Context, contentType string, bod
 	return c.Client.Do(req)
 }
 
-func (c *Client) DownloadFile(ctx context.Context, hash string, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewDownloadFileRequest(c.Server, hash)
+func (c *Client) DownloadFile(ctx context.Context, uuid openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDownloadFileRequest(c.Server, uuid)
 	if err != nil {
 		return nil, err
 	}
@@ -522,12 +523,12 @@ func NewUploadFileRequestWithBody(server string, contentType string, body io.Rea
 }
 
 // NewDownloadFileRequest generates requests for DownloadFile
-func NewDownloadFileRequest(server string, hash string) (*http.Request, error) {
+func NewDownloadFileRequest(server string, uuid openapi_types.UUID) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
 
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hash", runtime.ParamLocationPath, hash)
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "uuid", runtime.ParamLocationPath, uuid)
 	if err != nil {
 		return nil, err
 	}
@@ -738,7 +739,7 @@ type ClientWithResponsesInterface interface {
 	UploadFileWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UploadFileResponse, error)
 
 	// DownloadFileWithResponse request
-	DownloadFileWithResponse(ctx context.Context, hash string, reqEditors ...RequestEditorFn) (*DownloadFileResponse, error)
+	DownloadFileWithResponse(ctx context.Context, uuid openapi_types.UUID, reqEditors ...RequestEditorFn) (*DownloadFileResponse, error)
 
 	// DeleteSensitiveRecordWithIDWithResponse request
 	DeleteSensitiveRecordWithIDWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*DeleteSensitiveRecordWithIDResponse, error)
@@ -847,7 +848,7 @@ func (r ListSensitiveRecordsResponse) StatusCode() int {
 type PostSensitiveRecordResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *CreateSensitiveRecordResponse
+	JSON201      *CreateSensitiveRecordResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON422      *ErrorResponse
@@ -1065,8 +1066,8 @@ func (c *ClientWithResponses) UploadFileWithBodyWithResponse(ctx context.Context
 }
 
 // DownloadFileWithResponse request returning *DownloadFileResponse
-func (c *ClientWithResponses) DownloadFileWithResponse(ctx context.Context, hash string, reqEditors ...RequestEditorFn) (*DownloadFileResponse, error) {
-	rsp, err := c.DownloadFile(ctx, hash, reqEditors...)
+func (c *ClientWithResponses) DownloadFileWithResponse(ctx context.Context, uuid openapi_types.UUID, reqEditors ...RequestEditorFn) (*DownloadFileResponse, error) {
+	rsp, err := c.DownloadFile(ctx, uuid, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -1254,12 +1255,12 @@ func ParsePostSensitiveRecordResponse(rsp *http.Response) (*PostSensitiveRecordR
 	}
 
 	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
 		var dest CreateSensitiveRecordResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
-		response.JSON200 = &dest
+		response.JSON201 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest ErrorResponse
