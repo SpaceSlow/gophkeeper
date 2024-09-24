@@ -38,7 +38,7 @@ func (c *ServerConfig) TokenLifetime() time.Duration {
 }
 
 var defaultConfig = &ServerConfig{
-	NetAddress:           netaddress.NetAddress{Port: 8080},
+	NetAddress:           netaddress.NetAddress{Port: 443},
 	CertificatePath:      os.Getenv("CERTIFICATE"),
 	PrivateKeyPath:       os.Getenv("PRIVATE_KEY"),
 	DSN:                  os.Getenv("DSN"),

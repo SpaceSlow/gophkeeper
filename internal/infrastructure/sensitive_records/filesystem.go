@@ -23,14 +23,17 @@ func NewFilesystemRepo(dir string) (*FilesystemRepo, error) {
 
 func (r *FilesystemRepo) CreateFile(userID int, reader io.Reader) (uuid.UUID, error) {
 	var id uuid.UUID
-	for id = uuid.New(); r.isExist(r.path(userID, id)); id = uuid.New() {
+	for id = uuid.New(); r.isExist(r.filepath(userID, id)); id = uuid.New() {
 	}
-	f, err := os.Open(r.path(userID, id))
-	defer f.Close()
-
+	err := os.MkdirAll(r.userDir(userID), 0666)
+	if err != nil {
+		return uuid.Nil, err
+	}
+	f, err := os.Create(r.filepath(userID, id))
 	if err != nil {
 		return uuid.Nil, nil
 	}
+	defer f.Close()
 	_, err = io.Copy(f, reader)
 	if err != nil {
 		return uuid.Nil, err
@@ -43,6 +46,10 @@ func (r *FilesystemRepo) isExist(path string) bool {
 	return err == nil
 }
 
-func (r *FilesystemRepo) path(userID int, id uuid.UUID) string {
-	return path.Join(r.dir, strconv.Itoa(userID), id.String())
+func (r *FilesystemRepo) userDir(userID int) string {
+	return path.Join(r.dir, strconv.Itoa(userID))
+}
+
+func (r *FilesystemRepo) filepath(userID int, id uuid.UUID) string {
+	return path.Join(r.userDir(userID), id.String())
 }
