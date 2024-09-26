@@ -1,8 +1,13 @@
 package application
 
 import (
-	"github.com/gin-gonic/gin"
+	"context"
 
+	"github.com/getkin/kin-openapi/openapi3filter"
+	"github.com/gin-gonic/gin"
+	ginmiddleware "github.com/oapi-codegen/gin-middleware"
+
+	"github.com/SpaceSlow/gophkeeper/generated/openapi"
 	"github.com/SpaceSlow/gophkeeper/internal/application/sensitive_records"
 	"github.com/SpaceSlow/gophkeeper/internal/application/users"
 	"github.com/SpaceSlow/gophkeeper/pkg/crypto"
@@ -16,20 +21,25 @@ type httpServer struct {
 func SetupHTTPServer(userRepo UserRepository, sensitiveRecordRepo SensitiveRecordRepository, cfg users.ConfigProvider) *gin.Engine {
 	router := gin.Default()
 
-	server := httpServer{}
+	server := &httpServer{}
 	server.UserHandlers = users.SetupHandlers(userRepo, cfg)
 	server.SensitiveRecordHandlers = sensitive_records.SetupHandlers(sensitiveRecordRepo)
 
-	public := router.Group("/api")
-	public.POST("/register", server.RegisterUser)
-	public.POST("/login", server.LoginUser)
+	spec, _ := openapi.GetSwagger()
+	m := crypto.NewJWTMiddleware(cfg.SecretKey(), userRepo)
 
-	protected := router.Group("/api")
-	public.GET("/sensitive_record_types", server.ListSensitiveRecordTypes)
-	protected.Use(crypto.AuthMiddleware(userRepo, cfg))
-	protected.POST("/sensitive_records", server.PostSensitiveRecord)
-	protected.POST("/sensitive_records/files", server.UploadFile)
-	protected.GET("/sensitive_records/files/:uuid", server.DownloadFile)
+	validator := ginmiddleware.OapiRequestValidatorWithOptions(spec,
+		&ginmiddleware.Options{
+			Options: openapi3filter.Options{
+				AuthenticationFunc: func(ctx context.Context, input *openapi3filter.AuthenticationInput) error {
+					return m.AuthenticateRequest(ctx, input)
+				},
+			},
+		})
+
+	api := router.Group("/api", router.Handlers...)
+	api.Use(validator)
+	openapi.RegisterHandlers(api, server)
 
 	return router
 }

@@ -1,10 +1,8 @@
 package crypto
 
 import (
-	"strings"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
 )
 
@@ -27,18 +25,6 @@ func BuildJWT(userID int, tokenLifetime time.Duration, secretKey string) (string
 	}
 
 	return jwt, nil
-}
-
-func ExtractToken(c *gin.Context) (string, error) {
-	header := c.GetHeader("Authorization")
-	parts := strings.Split(header, " ")
-	if len(parts) != 2 {
-		return "", ErrInvalidAuthorizationHeader
-	}
-	if parts[0] != "Bearer" {
-		return "", ErrInvalidAuthorizationHeader
-	}
-	return parts[1], nil
 }
 
 func UserIDFromToken(tokenString, secretKey string) (int, error) {

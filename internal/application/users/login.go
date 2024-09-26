@@ -12,7 +12,7 @@ import (
 	"github.com/SpaceSlow/gophkeeper/pkg/crypto"
 )
 
-func (h UserHandlers) LoginUser(c *gin.Context) {
+func (h UserHandlers) PostLogin(c *gin.Context) {
 	var req openapi.LoginUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, openapi.ErrorResponse{

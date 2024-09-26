@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 
 	"github.com/SpaceSlow/gophkeeper/generated/openapi"
 	"github.com/SpaceSlow/gophkeeper/pkg/crypto"
@@ -31,19 +31,14 @@ func (h *SensitiveRecordHandlers) UploadFile(c *gin.Context) {
 	c.JSON(http.StatusCreated, openapi.CreateFileResponse{Uuid: uuid})
 }
 
-func (h *SensitiveRecordHandlers) DownloadFile(c *gin.Context) {
+func (h *SensitiveRecordHandlers) DownloadFile(c *gin.Context, uuid openapi_types.UUID) {
 	userID, err := crypto.UserID(c)
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
-	uid, err := uuid.Parse(c.Param("uuid"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, openapi.ErrorResponse{Errors: errors.New("invalid uuid").Error()})
-		return
-	}
 
-	file, err := h.repo.FetchFile(userID, uid)
+	file, err := h.repo.FetchFile(userID, uuid)
 	if err != nil {
 		c.JSON(http.StatusNotFound, openapi.ErrorResponse{Errors: errors.New("not found file with current uuid").Error()})
 		return

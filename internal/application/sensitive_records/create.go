@@ -10,7 +10,7 @@ import (
 	"github.com/SpaceSlow/gophkeeper/pkg/crypto"
 )
 
-func (h *SensitiveRecordHandlers) PostSensitiveRecord(c *gin.Context) {
+func (h *SensitiveRecordHandlers) PostSensitiveRecord(c *gin.Context, _ openapi.PostSensitiveRecordParams) {
 	sensitiveRecordTypeID, err := sensitive_records.NewSensitiveRecordTypeID(c.Query("type"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, openapi.ErrorResponse{Errors: err.Error()})

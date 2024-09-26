@@ -1,44 +1,57 @@
 package crypto
 
 import (
-	"net/http"
+	"context"
+	"errors"
+	"strings"
 
+	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/gin-gonic/gin"
+	ginmiddleware "github.com/oapi-codegen/gin-middleware"
 )
-
-type Config interface {
-	SecretKey() string
-}
 
 type Repository interface {
 	ExistUser(userID int) (bool, error)
 }
 
-func AuthMiddleware(r Repository, cfg Config) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		if isAuthenticated(c, r, cfg) {
-			c.Next()
-			return
-		}
-		c.AbortWithStatus(http.StatusUnauthorized)
+type JWTMiddleware struct {
+	secretKey string
+	repo      Repository
+}
+
+func NewJWTMiddleware(secretKey string, repo Repository) *JWTMiddleware {
+	return &JWTMiddleware{
+		secretKey: secretKey,
+		repo:      repo,
 	}
 }
 
-func isAuthenticated(c *gin.Context, r Repository, cfg Config) bool {
-	jwt, err := ExtractToken(c)
-	if err != nil {
-		return false
+func (m *JWTMiddleware) AuthenticateRequest(ctx context.Context, input *openapi3filter.AuthenticationInput) error {
+	authHeader := input.RequestValidationInput.Request.Header.Get("Authorization")
+	if authHeader == "" {
+		return errors.New("missing or invalid token")
 	}
-	userID, err := UserIDFromToken(jwt, cfg.SecretKey())
-	if err != nil {
-		return false
+
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || parts[0] != "Bearer" {
+		return errors.New("invalid token format")
 	}
-	isExisted, err := r.ExistUser(userID)
+
+	jwt := parts[1]
+
+	userID, err := UserIDFromToken(jwt, m.secretKey)
+	if err != nil {
+		return errors.New("invalid token format")
+	}
+	isExisted, err := m.repo.ExistUser(userID)
 	if err != nil || !isExisted {
-		return false
+		return errors.New("invalid token")
 	}
-	c.Set("userID", userID)
-	return true
+
+	ginCtx := ginmiddleware.GetGinContext(ctx)
+	ginCtx.Set("userID", userID)
+
+	return nil
 }
 
 func UserID(c *gin.Context) (int, error) {
