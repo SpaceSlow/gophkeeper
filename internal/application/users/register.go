@@ -9,7 +9,7 @@ import (
 	"github.com/SpaceSlow/gophkeeper/internal/domain/users"
 )
 
-func (h UserHandlers) RegisterUser(c *gin.Context) {
+func (h UserHandlers) PostRegister(c *gin.Context) {
 	var req openapi.RegisterUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, openapi.ErrorResponse{

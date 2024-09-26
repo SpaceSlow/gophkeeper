@@ -26,7 +26,7 @@ func (h *SensitiveRecordHandlers) ListSensitiveRecords(c *gin.Context) {
 	panic("implement me")
 }
 
-func (h *SensitiveRecordHandlers) SensitiveRecordDataWithID(c *gin.Context, id int) {
+func (h *SensitiveRecordHandlers) FetchSensitiveRecordWithID(c *gin.Context, id int) {
 	//TODO implement me
 	panic("implement me")
 }

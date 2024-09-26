@@ -20,7 +20,6 @@ paths:
         - users
       summary: Register user
       description: Register user in the GophKeeper via username and password
-      operationId: RegisterUser
       requestBody:
         required: true
         content:
@@ -50,7 +49,6 @@ paths:
         - users
       summary: Login user
       description: Login user in the GophKeeper via username and password
-      operationId: PostLogin
       requestBody:
         required: true
         content:
@@ -100,81 +98,6 @@ paths:
                 $ref: '#/components/schemas/ListSensitiveRecordTypeResponse'
         '500':
           description: Internal error on server
-  /sensitive_records/files:
-    post:
-      tags:
-        - sensitive records
-      summary: Create file of sensitive record
-      description: Upload file of sensitive record on the server and return uuid
-      operationId: UploadFile
-      requestBody:
-        content:
-          application/octet-stream:
-            schema:
-              type: string
-              format: binary
-      responses:
-        '201':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CreateFileResponse'
-        '400':
-          description: Invalid data
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: No authentication token
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Internal error on server
-      security:
-        - auth: []
-  /sensitive_records/files/{uuid}:
-    get:
-      tags:
-        - sensitive records
-      summary: Get file of sensitive record
-      description: Get stored file of sensitive record with current uuid
-      operationId: DownloadFile
-      parameters:
-        - name: uuid
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-            example: cb73828b-3b85-4ae8-a875-c67d1bb7ac06
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/octet-stream:
-              schema:
-                type: string
-                format: binary
-        '400':
-          description: Invalid data
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: No authentication token
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Internal error on server
-      security:
-        - auth: []
   /sensitive_records:
     post:
       tags:
@@ -182,12 +105,6 @@ paths:
       summary: Create a new sensitive record
       description: Place a new sensitive record in the GophKeeper
       operationId: PostSensitiveRecord
-      parameters:
-        - name: type
-          description: sensitive record type in string
-          in: query
-          schema:
-            $ref: '#/components/schemas/SensitiveRecordTypeEnum'
       requestBody:
         content:
           application/json:
@@ -246,54 +163,12 @@ paths:
       security:
         - auth: []
   /sensitive_records/{id}:
-    post:
-      tags:
-        - sensitive records
-      summary: Create data for sensitive record with {id}
-      description: Create data of sensitive record with {id}
-      operationId: CreateSensitiveRecordDataWithID
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateSensitiveRecordDataRequest'
-      responses:
-        '201':
-          description: Successful operation
-        '400':
-          description: Invalid data
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: No authentication token
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: No sensitive record with current id
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Internal error on server
-      security:
-        - auth: []
     get:
       tags:
         - sensitive records
       summary: Returns data for sensitive record with {id}
       description: Return data of sensitive record with {id}
-      operationId: SensitiveRecordDataWithID
+      operationId: FetchSensitiveRecordWithID
       parameters:
         - name: id
           in: path
@@ -306,7 +181,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CreateSensitiveRecordDataResponse'
+                $ref: '#/components/schemas/GetSensitiveRecordResponse'
         '401':
           description: No authentication token
           content:
@@ -407,23 +282,22 @@ components:
     CreateSensitiveRecordRequest:
       type: object
       required:
+        - type
         - metadata
+        - data
       properties:
+        type:
+          $ref: '#/components/schemas/SensitiveRecordTypeEnum'
         metadata:
           type: string
           example: some information about sensitive record
+        data:
+          type: string
+          format: binary
     CreateSensitiveRecordResponse:
-      $ref: '#/components/schemas/SensitiveRecord'
-    CreateSensitiveRecordDataRequest:
-      oneOf:
-        - $ref: '#/components/schemas/Credential'
-        - $ref: '#/components/schemas/PaymentCard'
-        - $ref: '#/components/schemas/BinaryFile'
-        - $ref: '#/components/schemas/Text'
-    CreateSensitiveRecordDataResponse:
-      $ref: '#/components/schemas/CreateSensitiveRecordDataRequest'
-    CreateFileResponse:
-      $ref: '#/components/schemas/BinaryFile'
+      $ref: '#/components/schemas/SensitiveRecordWithData'
+    GetSensitiveRecordResponse:
+      $ref: '#/components/schemas/SensitiveRecordWithData'
     ErrorResponse:
       type: object
       required:
@@ -448,74 +322,34 @@ components:
       type: object
       required:
         - id
+        - type
         - metadata
-        - sensitive_record_type_id
       properties:
         id:
           type: integer
           example: 10
+        type:
+          $ref: '#/components/schemas/SensitiveRecordTypeEnum'
         metadata:
           type: string
           example: some information about sensitive record
-        sensitive_record_type_id:
-          type: integer
-          example: 1
-    PaymentCard:
-      type: object
-      required:
-        - number
-        - expire_date
-        - cardholder
-        - code
-      properties:
-        number:
-          type: string
-          example: 1234123412341234
-        expire_date:
-          type: string
-          example: 12/12
-        cardholder:
-          type: string
-          example: IVAN IVANOV
-        code:
-          type: string
-          example: 123
-    BinaryFile:
-      type: object
-      required:
-        - uuid
-      properties:
-        uuid:
-          type: string
-          format: uuid
-          example: cb73828b-3b85-4ae8-a875-c67d1bb7ac06
-    Text:
-      type: object
-      required:
-        - data
-      properties:
-        data:
-          type: string
-          example: some text
-    Credential:
-      type: object
-      required:
-        - username
-        - password
-      properties:
-        username:
-          type: string
-          example: username1
-        password:
-          type: string
-          example: password1
+    SensitiveRecordWithData:
+      allOf:
+        - $ref: '#/components/schemas/SensitiveRecord'
+        - type: object
+          required:
+            - data
+          properties:
+            data:
+              type: string
+              format: binary
     # Enums and etc
     SensitiveRecordTypeEnum:
       type: string
       enum:
         - payment-card
         - text
-        - binary-file
+        - binary
         - credential
   # security schemes
   securitySchemes:

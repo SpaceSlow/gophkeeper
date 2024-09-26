@@ -4,9 +4,6 @@
 package openapi
 
 import (
-	"encoding/json"
-
-	"github.com/oapi-codegen/runtime"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
@@ -16,47 +13,30 @@ const (
 
 // Defines values for SensitiveRecordTypeEnum.
 const (
-	SensitiveRecordTypeEnumBinaryFile  SensitiveRecordTypeEnum = "binary-file"
-	SensitiveRecordTypeEnumCredential  SensitiveRecordTypeEnum = "credential"
-	SensitiveRecordTypeEnumPaymentCard SensitiveRecordTypeEnum = "payment-card"
-	SensitiveRecordTypeEnumText        SensitiveRecordTypeEnum = "text"
+	Binary      SensitiveRecordTypeEnum = "binary"
+	Credential  SensitiveRecordTypeEnum = "credential"
+	PaymentCard SensitiveRecordTypeEnum = "payment-card"
+	Text        SensitiveRecordTypeEnum = "text"
 )
-
-// BinaryFile defines model for BinaryFile.
-type BinaryFile struct {
-	Uuid openapi_types.UUID `json:"uuid"`
-}
-
-// CreateFileResponse defines model for CreateFileResponse.
-type CreateFileResponse = BinaryFile
-
-// CreateSensitiveRecordDataRequest defines model for CreateSensitiveRecordDataRequest.
-type CreateSensitiveRecordDataRequest struct {
-	union json.RawMessage
-}
-
-// CreateSensitiveRecordDataResponse defines model for CreateSensitiveRecordDataResponse.
-type CreateSensitiveRecordDataResponse = CreateSensitiveRecordDataRequest
 
 // CreateSensitiveRecordRequest defines model for CreateSensitiveRecordRequest.
 type CreateSensitiveRecordRequest struct {
-	Metadata string `json:"metadata"`
+	Data     openapi_types.File      `json:"data"`
+	Metadata string                  `json:"metadata"`
+	Type     SensitiveRecordTypeEnum `json:"type"`
 }
 
 // CreateSensitiveRecordResponse defines model for CreateSensitiveRecordResponse.
-type CreateSensitiveRecordResponse = SensitiveRecord
-
-// Credential defines model for Credential.
-type Credential struct {
-	Password string `json:"password"`
-	Username string `json:"username"`
-}
+type CreateSensitiveRecordResponse = SensitiveRecordWithData
 
 // ErrorResponse defines model for ErrorResponse.
 type ErrorResponse struct {
 	// Errors errors must split by \r symbol
 	Errors string `json:"errors"`
 }
+
+// GetSensitiveRecordResponse defines model for GetSensitiveRecordResponse.
+type GetSensitiveRecordResponse = SensitiveRecordWithData
 
 // ListSensitiveRecordResponse defines model for ListSensitiveRecordResponse.
 type ListSensitiveRecordResponse struct {
@@ -79,14 +59,6 @@ type LoginUserResponse struct {
 	Token string `json:"token"`
 }
 
-// PaymentCard defines model for PaymentCard.
-type PaymentCard struct {
-	Cardholder string `json:"cardholder"`
-	Code       string `json:"code"`
-	ExpireDate string `json:"expire_date"`
-	Number     string `json:"number"`
-}
-
 // RegisterUserRequest defines model for RegisterUserRequest.
 type RegisterUserRequest struct {
 	Password         string `json:"password"`
@@ -96,9 +68,9 @@ type RegisterUserRequest struct {
 
 // SensitiveRecord defines model for SensitiveRecord.
 type SensitiveRecord struct {
-	Id                    int    `json:"id"`
-	Metadata              string `json:"metadata"`
-	SensitiveRecordTypeId int    `json:"sensitive_record_type_id"`
+	Id       int                     `json:"id"`
+	Metadata string                  `json:"metadata"`
+	Type     SensitiveRecordTypeEnum `json:"type"`
 }
 
 // SensitiveRecordType defines model for SensitiveRecordType.
@@ -110,139 +82,19 @@ type SensitiveRecordType struct {
 // SensitiveRecordTypeEnum defines model for SensitiveRecordTypeEnum.
 type SensitiveRecordTypeEnum string
 
-// Text defines model for Text.
-type Text struct {
-	Data string `json:"data"`
-}
-
-// PostSensitiveRecordParams defines parameters for PostSensitiveRecord.
-type PostSensitiveRecordParams struct {
-	// Type sensitive record type in string
-	Type *SensitiveRecordTypeEnum `form:"type,omitempty" json:"type,omitempty"`
+// SensitiveRecordWithData defines model for SensitiveRecordWithData.
+type SensitiveRecordWithData struct {
+	Data     openapi_types.File      `json:"data"`
+	Id       int                     `json:"id"`
+	Metadata string                  `json:"metadata"`
+	Type     SensitiveRecordTypeEnum `json:"type"`
 }
 
 // PostLoginJSONRequestBody defines body for PostLogin for application/json ContentType.
 type PostLoginJSONRequestBody = LoginUserRequest
 
-// RegisterUserJSONRequestBody defines body for RegisterUser for application/json ContentType.
-type RegisterUserJSONRequestBody = RegisterUserRequest
+// PostRegisterJSONRequestBody defines body for PostRegister for application/json ContentType.
+type PostRegisterJSONRequestBody = RegisterUserRequest
 
 // PostSensitiveRecordJSONRequestBody defines body for PostSensitiveRecord for application/json ContentType.
 type PostSensitiveRecordJSONRequestBody = CreateSensitiveRecordRequest
-
-// CreateSensitiveRecordDataWithIDJSONRequestBody defines body for CreateSensitiveRecordDataWithID for application/json ContentType.
-type CreateSensitiveRecordDataWithIDJSONRequestBody = CreateSensitiveRecordDataRequest
-
-// AsCredential returns the union data inside the CreateSensitiveRecordDataRequest as a Credential
-func (t CreateSensitiveRecordDataRequest) AsCredential() (Credential, error) {
-	var body Credential
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromCredential overwrites any union data inside the CreateSensitiveRecordDataRequest as the provided Credential
-func (t *CreateSensitiveRecordDataRequest) FromCredential(v Credential) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeCredential performs a merge with any union data inside the CreateSensitiveRecordDataRequest, using the provided Credential
-func (t *CreateSensitiveRecordDataRequest) MergeCredential(v Credential) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-// AsPaymentCard returns the union data inside the CreateSensitiveRecordDataRequest as a PaymentCard
-func (t CreateSensitiveRecordDataRequest) AsPaymentCard() (PaymentCard, error) {
-	var body PaymentCard
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromPaymentCard overwrites any union data inside the CreateSensitiveRecordDataRequest as the provided PaymentCard
-func (t *CreateSensitiveRecordDataRequest) FromPaymentCard(v PaymentCard) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergePaymentCard performs a merge with any union data inside the CreateSensitiveRecordDataRequest, using the provided PaymentCard
-func (t *CreateSensitiveRecordDataRequest) MergePaymentCard(v PaymentCard) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-// AsBinaryFile returns the union data inside the CreateSensitiveRecordDataRequest as a BinaryFile
-func (t CreateSensitiveRecordDataRequest) AsBinaryFile() (BinaryFile, error) {
-	var body BinaryFile
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromBinaryFile overwrites any union data inside the CreateSensitiveRecordDataRequest as the provided BinaryFile
-func (t *CreateSensitiveRecordDataRequest) FromBinaryFile(v BinaryFile) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeBinaryFile performs a merge with any union data inside the CreateSensitiveRecordDataRequest, using the provided BinaryFile
-func (t *CreateSensitiveRecordDataRequest) MergeBinaryFile(v BinaryFile) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-// AsText returns the union data inside the CreateSensitiveRecordDataRequest as a Text
-func (t CreateSensitiveRecordDataRequest) AsText() (Text, error) {
-	var body Text
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromText overwrites any union data inside the CreateSensitiveRecordDataRequest as the provided Text
-func (t *CreateSensitiveRecordDataRequest) FromText(v Text) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeText performs a merge with any union data inside the CreateSensitiveRecordDataRequest, using the provided Text
-func (t *CreateSensitiveRecordDataRequest) MergeText(v Text) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-func (t CreateSensitiveRecordDataRequest) MarshalJSON() ([]byte, error) {
-	b, err := t.union.MarshalJSON()
-	return b, err
-}
-
-func (t *CreateSensitiveRecordDataRequest) UnmarshalJSON(b []byte) error {
-	err := t.union.UnmarshalJSON(b)
-	return err
-}

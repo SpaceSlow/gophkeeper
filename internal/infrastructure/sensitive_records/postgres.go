@@ -29,7 +29,7 @@ func (r *PostgresRepo) CreateSensitiveRecord(record *sensitive_records.Sensitive
 		r.ctx,
 		`INSERT INTO sensitive_records (user_id, sensitive_record_type_id, metadata) VALUES ($1, $2, $3) RETURNING id`,
 		record.UserID(), record.TypeID(), record.Metadata(),
-	)
+	) // TODO fix queries
 	var id int
 	if err := row.Scan(&id); err != nil {
 		return nil, err
@@ -45,7 +45,7 @@ func (r *PostgresRepo) ListSensitiveRecordTypes() ([]sensitive_records.Sensitive
 	rows, err := r.pool.Query(
 		r.ctx,
 		"SELECT id, name FROM sensitive_record_types",
-	)
+	) // TODO fix queries
 
 	if err != nil {
 		return nil, err

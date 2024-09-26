@@ -14,7 +14,6 @@ type ServerConfig struct {
 	PrivateKeyPath       string
 	DSN                  string
 	secretKey            string
-	SensitiveRecordsDir  string
 	keyLen               int
 	passwordIterationNum int
 	tokenLifetime        time.Duration
@@ -42,7 +41,6 @@ var defaultConfig = &ServerConfig{
 	CertificatePath:      os.Getenv("CERTIFICATE"),
 	PrivateKeyPath:       os.Getenv("PRIVATE_KEY"),
 	DSN:                  os.Getenv("DSN"),
-	SensitiveRecordsDir:  os.Getenv("SENSITIVE_RECORDS_DIR"),
 	secretKey:            os.Getenv("SECRET_KEY"),
 	tokenLifetime:        time.Hour,
 	keyLen:               32,

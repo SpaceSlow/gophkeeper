@@ -14,7 +14,6 @@ import (
 	"strings"
 
 	"github.com/oapi-codegen/runtime"
-	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
@@ -95,10 +94,10 @@ type ClientInterface interface {
 
 	PostLogin(ctx context.Context, body PostLoginJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// RegisterUserWithBody request with any body
-	RegisterUserWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PostRegisterWithBody request with any body
+	PostRegisterWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	RegisterUser(ctx context.Context, body RegisterUserJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostRegister(ctx context.Context, body PostRegisterJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListSensitiveRecordTypes request
 	ListSensitiveRecordTypes(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -107,26 +106,15 @@ type ClientInterface interface {
 	ListSensitiveRecords(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostSensitiveRecordWithBody request with any body
-	PostSensitiveRecordWithBody(ctx context.Context, params *PostSensitiveRecordParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostSensitiveRecordWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostSensitiveRecord(ctx context.Context, params *PostSensitiveRecordParams, body PostSensitiveRecordJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// UploadFileWithBody request with any body
-	UploadFileWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// DownloadFile request
-	DownloadFile(ctx context.Context, uuid openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostSensitiveRecord(ctx context.Context, body PostSensitiveRecordJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// DeleteSensitiveRecordWithID request
 	DeleteSensitiveRecordWithID(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// SensitiveRecordDataWithID request
-	SensitiveRecordDataWithID(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// CreateSensitiveRecordDataWithIDWithBody request with any body
-	CreateSensitiveRecordDataWithIDWithBody(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	CreateSensitiveRecordDataWithID(ctx context.Context, id int, body CreateSensitiveRecordDataWithIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// FetchSensitiveRecordWithID request
+	FetchSensitiveRecordWithID(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 func (c *Client) PostLoginWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -153,8 +141,8 @@ func (c *Client) PostLogin(ctx context.Context, body PostLoginJSONRequestBody, r
 	return c.Client.Do(req)
 }
 
-func (c *Client) RegisterUserWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewRegisterUserRequestWithBody(c.Server, contentType, body)
+func (c *Client) PostRegisterWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostRegisterRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -165,8 +153,8 @@ func (c *Client) RegisterUserWithBody(ctx context.Context, contentType string, b
 	return c.Client.Do(req)
 }
 
-func (c *Client) RegisterUser(ctx context.Context, body RegisterUserJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewRegisterUserRequest(c.Server, body)
+func (c *Client) PostRegister(ctx context.Context, body PostRegisterJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostRegisterRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -201,8 +189,8 @@ func (c *Client) ListSensitiveRecords(ctx context.Context, reqEditors ...Request
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostSensitiveRecordWithBody(ctx context.Context, params *PostSensitiveRecordParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostSensitiveRecordRequestWithBody(c.Server, params, contentType, body)
+func (c *Client) PostSensitiveRecordWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostSensitiveRecordRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -213,32 +201,8 @@ func (c *Client) PostSensitiveRecordWithBody(ctx context.Context, params *PostSe
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostSensitiveRecord(ctx context.Context, params *PostSensitiveRecordParams, body PostSensitiveRecordJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostSensitiveRecordRequest(c.Server, params, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) UploadFileWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewUploadFileRequestWithBody(c.Server, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) DownloadFile(ctx context.Context, uuid openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewDownloadFileRequest(c.Server, uuid)
+func (c *Client) PostSensitiveRecord(ctx context.Context, body PostSensitiveRecordJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostSensitiveRecordRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -261,32 +225,8 @@ func (c *Client) DeleteSensitiveRecordWithID(ctx context.Context, id int, reqEdi
 	return c.Client.Do(req)
 }
 
-func (c *Client) SensitiveRecordDataWithID(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewSensitiveRecordDataWithIDRequest(c.Server, id)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) CreateSensitiveRecordDataWithIDWithBody(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewCreateSensitiveRecordDataWithIDRequestWithBody(c.Server, id, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) CreateSensitiveRecordDataWithID(ctx context.Context, id int, body CreateSensitiveRecordDataWithIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewCreateSensitiveRecordDataWithIDRequest(c.Server, id, body)
+func (c *Client) FetchSensitiveRecordWithID(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewFetchSensitiveRecordWithIDRequest(c.Server, id)
 	if err != nil {
 		return nil, err
 	}
@@ -337,19 +277,19 @@ func NewPostLoginRequestWithBody(server string, contentType string, body io.Read
 	return req, nil
 }
 
-// NewRegisterUserRequest calls the generic RegisterUser builder with application/json body
-func NewRegisterUserRequest(server string, body RegisterUserJSONRequestBody) (*http.Request, error) {
+// NewPostRegisterRequest calls the generic PostRegister builder with application/json body
+func NewPostRegisterRequest(server string, body PostRegisterJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewRegisterUserRequestWithBody(server, "application/json", bodyReader)
+	return NewPostRegisterRequestWithBody(server, "application/json", bodyReader)
 }
 
-// NewRegisterUserRequestWithBody generates requests for RegisterUser with any type of body
-func NewRegisterUserRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+// NewPostRegisterRequestWithBody generates requests for PostRegister with any type of body
+func NewPostRegisterRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -432,18 +372,18 @@ func NewListSensitiveRecordsRequest(server string) (*http.Request, error) {
 }
 
 // NewPostSensitiveRecordRequest calls the generic PostSensitiveRecord builder with application/json body
-func NewPostSensitiveRecordRequest(server string, params *PostSensitiveRecordParams, body PostSensitiveRecordJSONRequestBody) (*http.Request, error) {
+func NewPostSensitiveRecordRequest(server string, body PostSensitiveRecordJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPostSensitiveRecordRequestWithBody(server, params, "application/json", bodyReader)
+	return NewPostSensitiveRecordRequestWithBody(server, "application/json", bodyReader)
 }
 
 // NewPostSensitiveRecordRequestWithBody generates requests for PostSensitiveRecord with any type of body
-func NewPostSensitiveRecordRequestWithBody(server string, params *PostSensitiveRecordParams, contentType string, body io.Reader) (*http.Request, error) {
+func NewPostSensitiveRecordRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -461,97 +401,12 @@ func NewPostSensitiveRecordRequestWithBody(server string, params *PostSensitiveR
 		return nil, err
 	}
 
-	if params != nil {
-		queryValues := queryURL.Query()
-
-		if params.Type != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "type", runtime.ParamLocationQuery, *params.Type); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
-
-		}
-
-		queryURL.RawQuery = queryValues.Encode()
-	}
-
 	req, err := http.NewRequest("POST", queryURL.String(), body)
 	if err != nil {
 		return nil, err
 	}
 
 	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewUploadFileRequestWithBody generates requests for UploadFile with any type of body
-func NewUploadFileRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/sensitive_records/files")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewDownloadFileRequest generates requests for DownloadFile
-func NewDownloadFileRequest(server string, uuid openapi_types.UUID) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "uuid", runtime.ParamLocationPath, uuid)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/sensitive_records/files/%s", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
 
 	return req, nil
 }
@@ -590,8 +445,8 @@ func NewDeleteSensitiveRecordWithIDRequest(server string, id int) (*http.Request
 	return req, nil
 }
 
-// NewSensitiveRecordDataWithIDRequest generates requests for SensitiveRecordDataWithID
-func NewSensitiveRecordDataWithIDRequest(server string, id int) (*http.Request, error) {
+// NewFetchSensitiveRecordWithIDRequest generates requests for FetchSensitiveRecordWithID
+func NewFetchSensitiveRecordWithIDRequest(server string, id int) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -620,53 +475,6 @@ func NewSensitiveRecordDataWithIDRequest(server string, id int) (*http.Request, 
 	if err != nil {
 		return nil, err
 	}
-
-	return req, nil
-}
-
-// NewCreateSensitiveRecordDataWithIDRequest calls the generic CreateSensitiveRecordDataWithID builder with application/json body
-func NewCreateSensitiveRecordDataWithIDRequest(server string, id int, body CreateSensitiveRecordDataWithIDJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewCreateSensitiveRecordDataWithIDRequestWithBody(server, id, "application/json", bodyReader)
-}
-
-// NewCreateSensitiveRecordDataWithIDRequestWithBody generates requests for CreateSensitiveRecordDataWithID with any type of body
-func NewCreateSensitiveRecordDataWithIDRequestWithBody(server string, id int, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/sensitive_records/%s", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -719,10 +527,10 @@ type ClientWithResponsesInterface interface {
 
 	PostLoginWithResponse(ctx context.Context, body PostLoginJSONRequestBody, reqEditors ...RequestEditorFn) (*PostLoginResponse, error)
 
-	// RegisterUserWithBodyWithResponse request with any body
-	RegisterUserWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RegisterUserResponse, error)
+	// PostRegisterWithBodyWithResponse request with any body
+	PostRegisterWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostRegisterResponse, error)
 
-	RegisterUserWithResponse(ctx context.Context, body RegisterUserJSONRequestBody, reqEditors ...RequestEditorFn) (*RegisterUserResponse, error)
+	PostRegisterWithResponse(ctx context.Context, body PostRegisterJSONRequestBody, reqEditors ...RequestEditorFn) (*PostRegisterResponse, error)
 
 	// ListSensitiveRecordTypesWithResponse request
 	ListSensitiveRecordTypesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListSensitiveRecordTypesResponse, error)
@@ -731,26 +539,15 @@ type ClientWithResponsesInterface interface {
 	ListSensitiveRecordsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListSensitiveRecordsResponse, error)
 
 	// PostSensitiveRecordWithBodyWithResponse request with any body
-	PostSensitiveRecordWithBodyWithResponse(ctx context.Context, params *PostSensitiveRecordParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostSensitiveRecordResponse, error)
+	PostSensitiveRecordWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostSensitiveRecordResponse, error)
 
-	PostSensitiveRecordWithResponse(ctx context.Context, params *PostSensitiveRecordParams, body PostSensitiveRecordJSONRequestBody, reqEditors ...RequestEditorFn) (*PostSensitiveRecordResponse, error)
-
-	// UploadFileWithBodyWithResponse request with any body
-	UploadFileWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UploadFileResponse, error)
-
-	// DownloadFileWithResponse request
-	DownloadFileWithResponse(ctx context.Context, uuid openapi_types.UUID, reqEditors ...RequestEditorFn) (*DownloadFileResponse, error)
+	PostSensitiveRecordWithResponse(ctx context.Context, body PostSensitiveRecordJSONRequestBody, reqEditors ...RequestEditorFn) (*PostSensitiveRecordResponse, error)
 
 	// DeleteSensitiveRecordWithIDWithResponse request
 	DeleteSensitiveRecordWithIDWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*DeleteSensitiveRecordWithIDResponse, error)
 
-	// SensitiveRecordDataWithIDWithResponse request
-	SensitiveRecordDataWithIDWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*SensitiveRecordDataWithIDResponse, error)
-
-	// CreateSensitiveRecordDataWithIDWithBodyWithResponse request with any body
-	CreateSensitiveRecordDataWithIDWithBodyWithResponse(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateSensitiveRecordDataWithIDResponse, error)
-
-	CreateSensitiveRecordDataWithIDWithResponse(ctx context.Context, id int, body CreateSensitiveRecordDataWithIDJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateSensitiveRecordDataWithIDResponse, error)
+	// FetchSensitiveRecordWithIDWithResponse request
+	FetchSensitiveRecordWithIDWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*FetchSensitiveRecordWithIDResponse, error)
 }
 
 type PostLoginResponse struct {
@@ -777,7 +574,7 @@ func (r PostLoginResponse) StatusCode() int {
 	return 0
 }
 
-type RegisterUserResponse struct {
+type PostRegisterResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON400      *ErrorResponse
@@ -785,7 +582,7 @@ type RegisterUserResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r RegisterUserResponse) Status() string {
+func (r PostRegisterResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -793,7 +590,7 @@ func (r RegisterUserResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r RegisterUserResponse) StatusCode() int {
+func (r PostRegisterResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -870,53 +667,6 @@ func (r PostSensitiveRecordResponse) StatusCode() int {
 	return 0
 }
 
-type UploadFileResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON201      *CreateFileResponse
-	JSON400      *ErrorResponse
-	JSON401      *ErrorResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r UploadFileResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r UploadFileResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type DownloadFileResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON400      *ErrorResponse
-	JSON401      *ErrorResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r DownloadFileResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r DownloadFileResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
 type DeleteSensitiveRecordWithIDResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -939,16 +689,16 @@ func (r DeleteSensitiveRecordWithIDResponse) StatusCode() int {
 	return 0
 }
 
-type SensitiveRecordDataWithIDResponse struct {
+type FetchSensitiveRecordWithIDResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *CreateSensitiveRecordDataResponse
+	JSON200      *GetSensitiveRecordResponse
 	JSON401      *ErrorResponse
 	JSON404      *ErrorResponse
 }
 
 // Status returns HTTPResponse.Status
-func (r SensitiveRecordDataWithIDResponse) Status() string {
+func (r FetchSensitiveRecordWithIDResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -956,31 +706,7 @@ func (r SensitiveRecordDataWithIDResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r SensitiveRecordDataWithIDResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type CreateSensitiveRecordDataWithIDResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON400      *ErrorResponse
-	JSON401      *ErrorResponse
-	JSON404      *ErrorResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r CreateSensitiveRecordDataWithIDResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r CreateSensitiveRecordDataWithIDResponse) StatusCode() int {
+func (r FetchSensitiveRecordWithIDResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -1004,21 +730,21 @@ func (c *ClientWithResponses) PostLoginWithResponse(ctx context.Context, body Po
 	return ParsePostLoginResponse(rsp)
 }
 
-// RegisterUserWithBodyWithResponse request with arbitrary body returning *RegisterUserResponse
-func (c *ClientWithResponses) RegisterUserWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RegisterUserResponse, error) {
-	rsp, err := c.RegisterUserWithBody(ctx, contentType, body, reqEditors...)
+// PostRegisterWithBodyWithResponse request with arbitrary body returning *PostRegisterResponse
+func (c *ClientWithResponses) PostRegisterWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostRegisterResponse, error) {
+	rsp, err := c.PostRegisterWithBody(ctx, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseRegisterUserResponse(rsp)
+	return ParsePostRegisterResponse(rsp)
 }
 
-func (c *ClientWithResponses) RegisterUserWithResponse(ctx context.Context, body RegisterUserJSONRequestBody, reqEditors ...RequestEditorFn) (*RegisterUserResponse, error) {
-	rsp, err := c.RegisterUser(ctx, body, reqEditors...)
+func (c *ClientWithResponses) PostRegisterWithResponse(ctx context.Context, body PostRegisterJSONRequestBody, reqEditors ...RequestEditorFn) (*PostRegisterResponse, error) {
+	rsp, err := c.PostRegister(ctx, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseRegisterUserResponse(rsp)
+	return ParsePostRegisterResponse(rsp)
 }
 
 // ListSensitiveRecordTypesWithResponse request returning *ListSensitiveRecordTypesResponse
@@ -1040,38 +766,20 @@ func (c *ClientWithResponses) ListSensitiveRecordsWithResponse(ctx context.Conte
 }
 
 // PostSensitiveRecordWithBodyWithResponse request with arbitrary body returning *PostSensitiveRecordResponse
-func (c *ClientWithResponses) PostSensitiveRecordWithBodyWithResponse(ctx context.Context, params *PostSensitiveRecordParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostSensitiveRecordResponse, error) {
-	rsp, err := c.PostSensitiveRecordWithBody(ctx, params, contentType, body, reqEditors...)
+func (c *ClientWithResponses) PostSensitiveRecordWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostSensitiveRecordResponse, error) {
+	rsp, err := c.PostSensitiveRecordWithBody(ctx, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
 	return ParsePostSensitiveRecordResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostSensitiveRecordWithResponse(ctx context.Context, params *PostSensitiveRecordParams, body PostSensitiveRecordJSONRequestBody, reqEditors ...RequestEditorFn) (*PostSensitiveRecordResponse, error) {
-	rsp, err := c.PostSensitiveRecord(ctx, params, body, reqEditors...)
+func (c *ClientWithResponses) PostSensitiveRecordWithResponse(ctx context.Context, body PostSensitiveRecordJSONRequestBody, reqEditors ...RequestEditorFn) (*PostSensitiveRecordResponse, error) {
+	rsp, err := c.PostSensitiveRecord(ctx, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
 	return ParsePostSensitiveRecordResponse(rsp)
-}
-
-// UploadFileWithBodyWithResponse request with arbitrary body returning *UploadFileResponse
-func (c *ClientWithResponses) UploadFileWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UploadFileResponse, error) {
-	rsp, err := c.UploadFileWithBody(ctx, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseUploadFileResponse(rsp)
-}
-
-// DownloadFileWithResponse request returning *DownloadFileResponse
-func (c *ClientWithResponses) DownloadFileWithResponse(ctx context.Context, uuid openapi_types.UUID, reqEditors ...RequestEditorFn) (*DownloadFileResponse, error) {
-	rsp, err := c.DownloadFile(ctx, uuid, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseDownloadFileResponse(rsp)
 }
 
 // DeleteSensitiveRecordWithIDWithResponse request returning *DeleteSensitiveRecordWithIDResponse
@@ -1083,30 +791,13 @@ func (c *ClientWithResponses) DeleteSensitiveRecordWithIDWithResponse(ctx contex
 	return ParseDeleteSensitiveRecordWithIDResponse(rsp)
 }
 
-// SensitiveRecordDataWithIDWithResponse request returning *SensitiveRecordDataWithIDResponse
-func (c *ClientWithResponses) SensitiveRecordDataWithIDWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*SensitiveRecordDataWithIDResponse, error) {
-	rsp, err := c.SensitiveRecordDataWithID(ctx, id, reqEditors...)
+// FetchSensitiveRecordWithIDWithResponse request returning *FetchSensitiveRecordWithIDResponse
+func (c *ClientWithResponses) FetchSensitiveRecordWithIDWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*FetchSensitiveRecordWithIDResponse, error) {
+	rsp, err := c.FetchSensitiveRecordWithID(ctx, id, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseSensitiveRecordDataWithIDResponse(rsp)
-}
-
-// CreateSensitiveRecordDataWithIDWithBodyWithResponse request with arbitrary body returning *CreateSensitiveRecordDataWithIDResponse
-func (c *ClientWithResponses) CreateSensitiveRecordDataWithIDWithBodyWithResponse(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateSensitiveRecordDataWithIDResponse, error) {
-	rsp, err := c.CreateSensitiveRecordDataWithIDWithBody(ctx, id, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseCreateSensitiveRecordDataWithIDResponse(rsp)
-}
-
-func (c *ClientWithResponses) CreateSensitiveRecordDataWithIDWithResponse(ctx context.Context, id int, body CreateSensitiveRecordDataWithIDJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateSensitiveRecordDataWithIDResponse, error) {
-	rsp, err := c.CreateSensitiveRecordDataWithID(ctx, id, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseCreateSensitiveRecordDataWithIDResponse(rsp)
+	return ParseFetchSensitiveRecordWithIDResponse(rsp)
 }
 
 // ParsePostLoginResponse parses an HTTP response from a PostLoginWithResponse call
@@ -1149,15 +840,15 @@ func ParsePostLoginResponse(rsp *http.Response) (*PostLoginResponse, error) {
 	return response, nil
 }
 
-// ParseRegisterUserResponse parses an HTTP response from a RegisterUserWithResponse call
-func ParseRegisterUserResponse(rsp *http.Response) (*RegisterUserResponse, error) {
+// ParsePostRegisterResponse parses an HTTP response from a PostRegisterWithResponse call
+func ParsePostRegisterResponse(rsp *http.Response) (*PostRegisterResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &RegisterUserResponse{
+	response := &PostRegisterResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -1288,79 +979,6 @@ func ParsePostSensitiveRecordResponse(rsp *http.Response) (*PostSensitiveRecordR
 	return response, nil
 }
 
-// ParseUploadFileResponse parses an HTTP response from a UploadFileWithResponse call
-func ParseUploadFileResponse(rsp *http.Response) (*UploadFileResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &UploadFileResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
-		var dest CreateFileResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON201 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON400 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON401 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseDownloadFileResponse parses an HTTP response from a DownloadFileWithResponse call
-func ParseDownloadFileResponse(rsp *http.Response) (*DownloadFileResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &DownloadFileResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON400 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON401 = &dest
-
-	}
-
-	return response, nil
-}
-
 // ParseDeleteSensitiveRecordWithIDResponse parses an HTTP response from a DeleteSensitiveRecordWithIDWithResponse call
 func ParseDeleteSensitiveRecordWithIDResponse(rsp *http.Response) (*DeleteSensitiveRecordWithIDResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -1387,66 +1005,26 @@ func ParseDeleteSensitiveRecordWithIDResponse(rsp *http.Response) (*DeleteSensit
 	return response, nil
 }
 
-// ParseSensitiveRecordDataWithIDResponse parses an HTTP response from a SensitiveRecordDataWithIDWithResponse call
-func ParseSensitiveRecordDataWithIDResponse(rsp *http.Response) (*SensitiveRecordDataWithIDResponse, error) {
+// ParseFetchSensitiveRecordWithIDResponse parses an HTTP response from a FetchSensitiveRecordWithIDWithResponse call
+func ParseFetchSensitiveRecordWithIDResponse(rsp *http.Response) (*FetchSensitiveRecordWithIDResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &SensitiveRecordDataWithIDResponse{
+	response := &FetchSensitiveRecordWithIDResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest CreateSensitiveRecordDataResponse
+		var dest GetSensitiveRecordResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON401 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON404 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseCreateSensitiveRecordDataWithIDResponse parses an HTTP response from a CreateSensitiveRecordDataWithIDWithResponse call
-func ParseCreateSensitiveRecordDataWithIDResponse(rsp *http.Response) (*CreateSensitiveRecordDataWithIDResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &CreateSensitiveRecordDataWithIDResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse
