@@ -13,6 +13,7 @@ type SensitiveRecordRepository interface {
 	ListSensitiveRecordTypes() ([]sensitive_records.SensitiveRecordType, error)
 	CreateSensitiveRecord(sensitiveRecord *sensitive_records.SensitiveRecord) (*sensitive_records.SensitiveRecord, error)
 	CreateFile(userID int, reader io.Reader) (uuid.UUID, error)
+	FetchFile(userID int, uid uuid.UUID) (io.Reader, error)
 	Close()
 }
 

@@ -29,6 +29,7 @@ func SetupHTTPServer(userRepo UserRepository, sensitiveRecordRepo SensitiveRecor
 	protected.Use(crypto.AuthMiddleware(userRepo, cfg))
 	protected.POST("/sensitive_records", server.PostSensitiveRecord)
 	protected.POST("/sensitive_records/files", server.UploadFile)
+	protected.GET("/sensitive_records/files/:uuid", server.DownloadFile)
 
 	return router
 }

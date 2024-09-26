@@ -41,6 +41,14 @@ func (r *FilesystemRepo) CreateFile(userID int, reader io.Reader) (uuid.UUID, er
 	return id, nil
 }
 
+func (r *FilesystemRepo) FetchFile(userID int, uid uuid.UUID) (io.Reader, error) {
+	filepath := r.filepath(userID, uid)
+	if !r.isExist(filepath) {
+		return nil, errors.New("file doesn't exist")
+	}
+	return os.Open(filepath)
+}
+
 func (r *FilesystemRepo) isExist(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
