@@ -19,9 +19,6 @@ type ServerInterface interface {
 	// Register user
 	// (POST /register)
 	PostRegister(c *gin.Context)
-	// Returns sensitive record types
-	// (GET /sensitive_record_types)
-	ListSensitiveRecordTypes(c *gin.Context)
 	// Returns sensitive records
 	// (GET /sensitive_records)
 	ListSensitiveRecords(c *gin.Context)
@@ -72,19 +69,6 @@ func (siw *ServerInterfaceWrapper) PostRegister(c *gin.Context) {
 	}
 
 	siw.Handler.PostRegister(c)
-}
-
-// ListSensitiveRecordTypes operation middleware
-func (siw *ServerInterfaceWrapper) ListSensitiveRecordTypes(c *gin.Context) {
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		middleware(c)
-		if c.IsAborted() {
-			return
-		}
-	}
-
-	siw.Handler.ListSensitiveRecordTypes(c)
 }
 
 // ListSensitiveRecords operation middleware
@@ -224,7 +208,6 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 
 	router.POST(options.BaseURL+"/login", wrapper.PostLogin)
 	router.POST(options.BaseURL+"/register", wrapper.PostRegister)
-	router.GET(options.BaseURL+"/sensitive_record_types", wrapper.ListSensitiveRecordTypes)
 	router.GET(options.BaseURL+"/sensitive_records", wrapper.ListSensitiveRecords)
 	router.POST(options.BaseURL+"/sensitive_records", wrapper.PostSensitiveRecord)
 	router.DELETE(options.BaseURL+"/sensitive_records/:id", wrapper.DeleteSensitiveRecordWithID)

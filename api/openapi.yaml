@@ -82,22 +82,6 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal error on server
-  /sensitive_record_types:
-    get:
-      tags:
-        - sensitive records
-      summary: Returns sensitive record types
-      description: Returns a array of sensitive record types
-      operationId: ListSensitiveRecordTypes
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ListSensitiveRecordTypeResponse'
-        '500':
-          description: Internal error on server
   /sensitive_records:
     post:
       tags:
@@ -309,15 +293,6 @@ components:
       properties:
         token:
           type: string
-    ListSensitiveRecordTypeResponse:
-      type: object
-      required:
-        - sensitive_record_types
-      properties:
-        sensitive_record_types:
-          type: array
-          items:
-            $ref: '#/components/schemas/SensitiveRecordType'
     ListSensitiveRecordResponse:
       type: object
       required:
@@ -357,17 +332,6 @@ components:
           type: string
           description: errors must split by \r symbol
     # models
-    SensitiveRecordType:
-      type: object
-      required:
-        - id
-        - name
-      properties:
-        id:
-          type: integer
-          example: 1
-        name:
-          $ref: '#/components/schemas/SensitiveRecordTypeEnum'
     SensitiveRecord:
       type: object
       required:

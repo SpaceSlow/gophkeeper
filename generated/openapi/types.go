@@ -35,11 +35,6 @@ type ListSensitiveRecordResponse struct {
 	SensitiveRecords []SensitiveRecord `json:"sensitive_records"`
 }
 
-// ListSensitiveRecordTypeResponse defines model for ListSensitiveRecordTypeResponse.
-type ListSensitiveRecordTypeResponse struct {
-	SensitiveRecordTypes []SensitiveRecordType `json:"sensitive_record_types"`
-}
-
 // LoginUserRequest defines model for LoginUserRequest.
 type LoginUserRequest struct {
 	Password string `json:"password"`
@@ -63,12 +58,6 @@ type SensitiveRecord struct {
 	Id       int                     `json:"id"`
 	Metadata string                  `json:"metadata"`
 	Type     SensitiveRecordTypeEnum `json:"type"`
-}
-
-// SensitiveRecordType defines model for SensitiveRecordType.
-type SensitiveRecordType struct {
-	Id   int                     `json:"id"`
-	Name SensitiveRecordTypeEnum `json:"name"`
 }
 
 // SensitiveRecordTypeEnum defines model for SensitiveRecordTypeEnum.

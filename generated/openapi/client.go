@@ -99,9 +99,6 @@ type ClientInterface interface {
 
 	PostRegister(ctx context.Context, body PostRegisterJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// ListSensitiveRecordTypes request
-	ListSensitiveRecordTypes(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
-
 	// ListSensitiveRecords request
 	ListSensitiveRecords(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -158,18 +155,6 @@ func (c *Client) PostRegisterWithBody(ctx context.Context, contentType string, b
 
 func (c *Client) PostRegister(ctx context.Context, body PostRegisterJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostRegisterRequest(c.Server, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) ListSensitiveRecordTypes(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewListSensitiveRecordTypesRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -328,33 +313,6 @@ func NewPostRegisterRequestWithBody(server string, contentType string, body io.R
 	}
 
 	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewListSensitiveRecordTypesRequest generates requests for ListSensitiveRecordTypes
-func NewListSensitiveRecordTypesRequest(server string) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/sensitive_record_types")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
 
 	return req, nil
 }
@@ -583,9 +541,6 @@ type ClientWithResponsesInterface interface {
 
 	PostRegisterWithResponse(ctx context.Context, body PostRegisterJSONRequestBody, reqEditors ...RequestEditorFn) (*PostRegisterResponse, error)
 
-	// ListSensitiveRecordTypesWithResponse request
-	ListSensitiveRecordTypesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListSensitiveRecordTypesResponse, error)
-
 	// ListSensitiveRecordsWithResponse request
 	ListSensitiveRecordsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListSensitiveRecordsResponse, error)
 
@@ -645,28 +600,6 @@ func (r PostRegisterResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r PostRegisterResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type ListSensitiveRecordTypesResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *ListSensitiveRecordTypeResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r ListSensitiveRecordTypesResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r ListSensitiveRecordTypesResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -825,15 +758,6 @@ func (c *ClientWithResponses) PostRegisterWithResponse(ctx context.Context, body
 	return ParsePostRegisterResponse(rsp)
 }
 
-// ListSensitiveRecordTypesWithResponse request returning *ListSensitiveRecordTypesResponse
-func (c *ClientWithResponses) ListSensitiveRecordTypesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListSensitiveRecordTypesResponse, error) {
-	rsp, err := c.ListSensitiveRecordTypes(ctx, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseListSensitiveRecordTypesResponse(rsp)
-}
-
 // ListSensitiveRecordsWithResponse request returning *ListSensitiveRecordsResponse
 func (c *ClientWithResponses) ListSensitiveRecordsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListSensitiveRecordsResponse, error) {
 	rsp, err := c.ListSensitiveRecords(ctx, reqEditors...)
@@ -954,32 +878,6 @@ func ParsePostRegisterResponse(rsp *http.Response) (*PostRegisterResponse, error
 			return nil, err
 		}
 		response.JSON409 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseListSensitiveRecordTypesResponse parses an HTTP response from a ListSensitiveRecordTypesWithResponse call
-func ParseListSensitiveRecordTypesResponse(rsp *http.Response) (*ListSensitiveRecordTypesResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &ListSensitiveRecordTypesResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ListSensitiveRecordTypeResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
 
 	}
 
