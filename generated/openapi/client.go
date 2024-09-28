@@ -702,7 +702,6 @@ func (r FetchSensitiveRecordWithIDResponse) StatusCode() int {
 type PostSensitiveRecordDataResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON201      *CreateSensitiveRecordDataResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -1038,13 +1037,6 @@ func ParsePostSensitiveRecordDataResponse(rsp *http.Response) (*PostSensitiveRec
 	}
 
 	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
-		var dest CreateSensitiveRecordDataResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON201 = &dest
-
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {

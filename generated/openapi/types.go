@@ -15,11 +15,6 @@ const (
 	Text        SensitiveRecordTypeEnum = "text"
 )
 
-// CreateSensitiveRecordDataResponse defines model for CreateSensitiveRecordDataResponse.
-type CreateSensitiveRecordDataResponse struct {
-	Message string `json:"message"`
-}
-
 // CreateSensitiveRecordRequest defines model for CreateSensitiveRecordRequest.
 type CreateSensitiveRecordRequest struct {
 	Metadata string                  `json:"metadata"`

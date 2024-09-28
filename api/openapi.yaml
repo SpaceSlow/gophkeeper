@@ -168,10 +168,6 @@ paths:
       responses:
         '201':
           description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CreateSensitiveRecordDataResponse'
         '400':
           description: Invalid input
           content:
@@ -321,14 +317,6 @@ components:
           example: some information about sensitive record
     CreateSensitiveRecordResponse:
       $ref: '#/components/schemas/SensitiveRecord'
-    CreateSensitiveRecordDataResponse:
-      type: object
-      required:
-        - message
-      properties:
-        message:
-          type: string
-          example: success
     ErrorResponse:
       type: object
       required:
