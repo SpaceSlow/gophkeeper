@@ -34,6 +34,9 @@ type ServerInterface interface {
 	// Returns data for sensitive record with {id}
 	// (GET /sensitive_records/{id})
 	FetchSensitiveRecordWithID(c *gin.Context, id int)
+	// Upload binary data of sensitive record
+	// (POST /sensitive_records/{id})
+	PostSensitiveRecordData(c *gin.Context, id int)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -166,6 +169,32 @@ func (siw *ServerInterfaceWrapper) FetchSensitiveRecordWithID(c *gin.Context) {
 	siw.Handler.FetchSensitiveRecordWithID(c, id)
 }
 
+// PostSensitiveRecordData operation middleware
+func (siw *ServerInterfaceWrapper) PostSensitiveRecordData(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(AuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.PostSensitiveRecordData(c, id)
+}
+
 // GinServerOptions provides options for the Gin server.
 type GinServerOptions struct {
 	BaseURL      string
@@ -200,4 +229,5 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.POST(options.BaseURL+"/sensitive_records", wrapper.PostSensitiveRecord)
 	router.DELETE(options.BaseURL+"/sensitive_records/:id", wrapper.DeleteSensitiveRecordWithID)
 	router.GET(options.BaseURL+"/sensitive_records/:id", wrapper.FetchSensitiveRecordWithID)
+	router.POST(options.BaseURL+"/sensitive_records/:id", wrapper.PostSensitiveRecordData)
 }

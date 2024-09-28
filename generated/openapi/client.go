@@ -115,6 +115,9 @@ type ClientInterface interface {
 
 	// FetchSensitiveRecordWithID request
 	FetchSensitiveRecordWithID(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostSensitiveRecordDataWithBody request with any body
+	PostSensitiveRecordDataWithBody(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 func (c *Client) PostLoginWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -227,6 +230,18 @@ func (c *Client) DeleteSensitiveRecordWithID(ctx context.Context, id int, reqEdi
 
 func (c *Client) FetchSensitiveRecordWithID(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewFetchSensitiveRecordWithIDRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostSensitiveRecordDataWithBody(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostSensitiveRecordDataRequestWithBody(c.Server, id, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -479,6 +494,42 @@ func NewFetchSensitiveRecordWithIDRequest(server string, id int) (*http.Request,
 	return req, nil
 }
 
+// NewPostSensitiveRecordDataRequestWithBody generates requests for PostSensitiveRecordData with any type of body
+func NewPostSensitiveRecordDataRequestWithBody(server string, id int, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/sensitive_records/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 func (c *Client) applyEditors(ctx context.Context, req *http.Request, additionalEditors []RequestEditorFn) error {
 	for _, r := range c.RequestEditors {
 		if err := r(ctx, req); err != nil {
@@ -548,6 +599,9 @@ type ClientWithResponsesInterface interface {
 
 	// FetchSensitiveRecordWithIDWithResponse request
 	FetchSensitiveRecordWithIDWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*FetchSensitiveRecordWithIDResponse, error)
+
+	// PostSensitiveRecordDataWithBodyWithResponse request with any body
+	PostSensitiveRecordDataWithBodyWithResponse(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostSensitiveRecordDataResponse, error)
 }
 
 type PostLoginResponse struct {
@@ -692,7 +746,6 @@ func (r DeleteSensitiveRecordWithIDResponse) StatusCode() int {
 type FetchSensitiveRecordWithIDResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *GetSensitiveRecordResponse
 	JSON401      *ErrorResponse
 	JSON404      *ErrorResponse
 }
@@ -707,6 +760,31 @@ func (r FetchSensitiveRecordWithIDResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r FetchSensitiveRecordWithIDResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostSensitiveRecordDataResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON201      *CreateSensitiveRecordResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON422      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PostSensitiveRecordDataResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostSensitiveRecordDataResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -798,6 +876,15 @@ func (c *ClientWithResponses) FetchSensitiveRecordWithIDWithResponse(ctx context
 		return nil, err
 	}
 	return ParseFetchSensitiveRecordWithIDResponse(rsp)
+}
+
+// PostSensitiveRecordDataWithBodyWithResponse request with arbitrary body returning *PostSensitiveRecordDataResponse
+func (c *ClientWithResponses) PostSensitiveRecordDataWithBodyWithResponse(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostSensitiveRecordDataResponse, error) {
+	rsp, err := c.PostSensitiveRecordDataWithBody(ctx, id, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostSensitiveRecordDataResponse(rsp)
 }
 
 // ParsePostLoginResponse parses an HTTP response from a PostLoginWithResponse call
@@ -1019,13 +1106,6 @@ func ParseFetchSensitiveRecordWithIDResponse(rsp *http.Response) (*FetchSensitiv
 	}
 
 	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest GetSensitiveRecordResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -1039,6 +1119,53 @@ func ParseFetchSensitiveRecordWithIDResponse(rsp *http.Response) (*FetchSensitiv
 			return nil, err
 		}
 		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostSensitiveRecordDataResponse parses an HTTP response from a PostSensitiveRecordDataWithResponse call
+func ParsePostSensitiveRecordDataResponse(rsp *http.Response) (*PostSensitiveRecordDataResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostSensitiveRecordDataResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest CreateSensitiveRecordResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
 
 	}
 

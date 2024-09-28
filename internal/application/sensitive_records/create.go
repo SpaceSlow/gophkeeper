@@ -46,7 +46,7 @@ func (h *SensitiveRecordHandlers) PostSensitiveRecord(c *gin.Context) {
 	})
 }
 
-func (h *SensitiveRecordHandlers) CreateSensitiveRecordDataWithID(c *gin.Context, id int) {
+func (h *SensitiveRecordHandlers) PostSensitiveRecordData(c *gin.Context, id int) {
 	//TODO implement me
 	panic("implement me")
 }

@@ -163,6 +163,53 @@ paths:
       security:
         - auth: []
   /sensitive_records/{id}:
+    post:
+      tags:
+        - sensitive records
+      summary: Upload binary data of sensitive record
+      description: Upload binary data of sensitive record to the GophKeeper
+      operationId: PostSensitiveRecordData
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '201':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateSensitiveRecordResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No authentication token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation exception
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal error on server
+      security:
+        - auth: [ ]
     get:
       tags:
         - sensitive records
@@ -179,9 +226,10 @@ paths:
         '200':
           description: Successful operation
           content:
-            application/json:
+            application/octet-stream:
               schema:
-                $ref: '#/components/schemas/GetSensitiveRecordResponse'
+                type: string
+                format: binary
         '401':
           description: No authentication token
           content:
@@ -284,20 +332,22 @@ components:
       required:
         - type
         - metadata
-        - data
       properties:
         type:
           $ref: '#/components/schemas/SensitiveRecordTypeEnum'
         metadata:
           type: string
           example: some information about sensitive record
-        data:
-          type: string
-          format: binary
     CreateSensitiveRecordResponse:
-      $ref: '#/components/schemas/SensitiveRecordWithData'
-    GetSensitiveRecordResponse:
-      $ref: '#/components/schemas/SensitiveRecordWithData'
+      $ref: '#/components/schemas/SensitiveRecord'
+    CreateSensitiveRecordDataResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          example: success
     ErrorResponse:
       type: object
       required:
@@ -333,16 +383,6 @@ components:
         metadata:
           type: string
           example: some information about sensitive record
-    SensitiveRecordWithData:
-      allOf:
-        - $ref: '#/components/schemas/SensitiveRecord'
-        - type: object
-          required:
-            - data
-          properties:
-            data:
-              type: string
-              format: binary
     # Enums and etc
     SensitiveRecordTypeEnum:
       type: string
