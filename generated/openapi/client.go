@@ -702,10 +702,11 @@ func (r FetchSensitiveRecordWithIDResponse) StatusCode() int {
 type PostSensitiveRecordDataResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON201      *CreateSensitiveRecordResponse
+	JSON201      *CreateSensitiveRecordDataResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
-	JSON422      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON409      *ErrorResponse
 }
 
 // Status returns HTTPResponse.Status
@@ -1038,7 +1039,7 @@ func ParsePostSensitiveRecordDataResponse(rsp *http.Response) (*PostSensitiveRec
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
-		var dest CreateSensitiveRecordResponse
+		var dest CreateSensitiveRecordDataResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -1058,12 +1059,19 @@ func ParsePostSensitiveRecordDataResponse(rsp *http.Response) (*PostSensitiveRec
 		}
 		response.JSON401 = &dest
 
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
-		response.JSON422 = &dest
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
 
 	}
 

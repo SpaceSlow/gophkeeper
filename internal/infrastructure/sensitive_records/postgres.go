@@ -2,7 +2,11 @@ package sensitive_records
 
 import (
 	"context"
+	"errors"
 	"fmt"
+
+	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/SpaceSlow/gophkeeper/internal/domain/sensitive_records"
@@ -39,6 +43,36 @@ func (r *PostgresRepo) CreateSensitiveRecord(record *sensitive_records.Sensitive
 		return nil, err
 	}
 	return newRecord, nil
+}
+
+func (r *PostgresRepo) IsSensitiveRecordOwner(id, userID int) (bool, error) {
+	row := r.pool.QueryRow(
+		r.ctx,
+		`SELECT EXISTS(SELECT 1 FROM sensitive_records WHERE id=$1 AND user_id=$2)`,
+		id, userID,
+	)
+
+	var isOwner bool
+	err := row.Scan(&isOwner)
+	return isOwner, err
+}
+
+func (r *PostgresRepo) CreateSensitiveRecordData(data *sensitive_records.SensitiveRecordData) error {
+	binData, err := data.DataAsBytes()
+	if err != nil {
+		return err
+	}
+
+	_, err = r.pool.Exec(
+		r.ctx,
+		`INSERT INTO sensitive_datas(sensitive_record_id, data) VALUES ($1, $2)`,
+		data.SensitiveRecordID(), binData,
+	)
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
+		return sensitive_records.NewExistSensitiveRecordDataError(data.SensitiveRecordID())
+	}
+	return err
 }
 
 func (r *PostgresRepo) ListSensitiveRecords(userID int) ([]sensitive_records.SensitiveRecord, error) {

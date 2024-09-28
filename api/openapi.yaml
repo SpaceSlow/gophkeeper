@@ -171,7 +171,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CreateSensitiveRecordResponse'
+                $ref: '#/components/schemas/CreateSensitiveRecordDataResponse'
         '400':
           description: Invalid input
           content:
@@ -184,8 +184,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-        '422':
-          description: Validation exception
+        '403':
+          description: No rights to the sensitive record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Already exist data of sensitive record with current id
           content:
             application/json:
               schema:
