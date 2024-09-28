@@ -11,12 +11,6 @@ import (
 )
 
 func (h *SensitiveRecordHandlers) PostSensitiveRecord(c *gin.Context) {
-	sensitiveRecordTypeID, err := sensitive_records.NewSensitiveRecordTypeID(c.Query("type"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, openapi.ErrorResponse{Errors: err.Error()})
-		return
-	}
-
 	var req openapi.CreateSensitiveRecordRequest
 	if err := c.Bind(&req); err != nil {
 		c.JSON(http.StatusBadRequest, openapi.ErrorResponse{Errors: err.Error()})
@@ -28,7 +22,7 @@ func (h *SensitiveRecordHandlers) PostSensitiveRecord(c *gin.Context) {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
-	sensitiveRecord, err := sensitive_records.CreateSensitiveRecord(userID, int(sensitiveRecordTypeID), req.Metadata) // TODO add type and data
+	sensitiveRecord, err := sensitive_records.CreateSensitiveRecord(userID, string(req.Type), req.Metadata)
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
@@ -42,7 +36,8 @@ func (h *SensitiveRecordHandlers) PostSensitiveRecord(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, openapi.CreateSensitiveRecordResponse{
 		Id:       sensitiveRecord.Id(),
-		Metadata: sensitiveRecord.Metadata(), // TODO add data and type in response
+		Metadata: sensitiveRecord.Metadata(),
+		Type:     openapi.SensitiveRecordTypeEnum(sensitiveRecord.Type()),
 	})
 }
 

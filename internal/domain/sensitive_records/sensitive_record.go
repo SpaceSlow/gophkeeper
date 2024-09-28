@@ -1,23 +1,23 @@
 package sensitive_records
 
 type SensitiveRecord struct {
-	id                    int
-	userID                int
-	sensitiveRecordTypeID int
-	metadata              string
+	id       int
+	userID   int
+	dType    string
+	metadata string
 }
 
-func NewSensitiveRecord(id, userID, sensitiveRecordTypeID int, metadata string) (*SensitiveRecord, error) {
+func NewSensitiveRecord(id, userID int, dType string, metadata string) (*SensitiveRecord, error) {
 	return &SensitiveRecord{
-		id:                    id,
-		userID:                userID,
-		sensitiveRecordTypeID: sensitiveRecordTypeID,
-		metadata:              metadata,
+		id:       id,
+		userID:   userID,
+		dType:    dType,
+		metadata: metadata,
 	}, nil
 }
 
-func CreateSensitiveRecord(userID, sensitiveRecordTypeID int, metadata string) (*SensitiveRecord, error) {
-	return NewSensitiveRecord(0, userID, sensitiveRecordTypeID, metadata)
+func CreateSensitiveRecord(userID int, dType string, metadata string) (*SensitiveRecord, error) {
+	return NewSensitiveRecord(0, userID, dType, metadata)
 }
 
 func (r *SensitiveRecord) Id() int {
@@ -28,8 +28,8 @@ func (r *SensitiveRecord) UserID() int {
 	return r.userID
 }
 
-func (r *SensitiveRecord) TypeID() int {
-	return r.sensitiveRecordTypeID
+func (r *SensitiveRecord) Type() string {
+	return r.dType
 }
 
 func (r *SensitiveRecord) Metadata() string {

@@ -27,14 +27,14 @@ func NewPostgresRepo(ctx context.Context, dsn string) (*PostgresRepo, error) {
 func (r *PostgresRepo) CreateSensitiveRecord(record *sensitive_records.SensitiveRecord) (*sensitive_records.SensitiveRecord, error) {
 	row := r.pool.QueryRow(
 		r.ctx,
-		`INSERT INTO sensitive_records (user_id, sensitive_record_type_id, metadata) VALUES ($1, $2, $3) RETURNING id`,
-		record.UserID(), record.TypeID(), record.Metadata(),
-	) // TODO fix queries
+		`INSERT INTO sensitive_records (user_id, type, metadata) VALUES ($1, $2, $3) RETURNING id`,
+		record.UserID(), record.Type(), record.Metadata(),
+	)
 	var id int
 	if err := row.Scan(&id); err != nil {
 		return nil, err
 	}
-	newRecord, err := sensitive_records.NewSensitiveRecord(id, record.UserID(), record.TypeID(), record.Metadata())
+	newRecord, err := sensitive_records.NewSensitiveRecord(id, record.UserID(), record.Type(), record.Metadata())
 	if err != nil {
 		return nil, err
 	}
