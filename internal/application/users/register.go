@@ -41,5 +41,5 @@ func (h UserHandlers) PostRegister(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, nil)
+	c.Status(http.StatusOK)
 }
