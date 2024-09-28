@@ -7,6 +7,7 @@ import (
 
 type SensitiveRecordRepository interface {
 	CreateSensitiveRecord(sensitiveRecord *sensitive_records.SensitiveRecord) (*sensitive_records.SensitiveRecord, error)
+	ListSensitiveRecords(userID int) ([]sensitive_records.SensitiveRecord, error)
 	Close()
 }
 

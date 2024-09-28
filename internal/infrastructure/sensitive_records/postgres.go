@@ -41,6 +41,37 @@ func (r *PostgresRepo) CreateSensitiveRecord(record *sensitive_records.Sensitive
 	return newRecord, nil
 }
 
+func (r *PostgresRepo) ListSensitiveRecords(userID int) ([]sensitive_records.SensitiveRecord, error) {
+	rows, err := r.pool.Query(
+		r.ctx,
+		`SELECT id, type, metadata FROM sensitive_records WHERE user_id=$1`,
+		userID,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	var (
+		id       int
+		dType    string
+		metadata string
+	)
+	records := make([]sensitive_records.SensitiveRecord, 0)
+	for rows.Next() {
+		err := rows.Scan(&id, &dType, &metadata)
+		if err != nil {
+			return nil, err
+		}
+		record, err := sensitive_records.NewSensitiveRecord(id, userID, dType, metadata)
+		if err != nil {
+			return nil, err
+		}
+		records = append(records, *record)
+	}
+
+	return records, nil
+}
+
 func (r *PostgresRepo) Close() {
 	r.pool.Close()
 }
