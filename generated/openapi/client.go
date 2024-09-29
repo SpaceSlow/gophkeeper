@@ -680,6 +680,7 @@ type FetchSensitiveRecordWithIDResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
 	JSON404      *ErrorResponse
 }
 
@@ -1010,6 +1011,13 @@ func ParseFetchSensitiveRecordWithIDResponse(rsp *http.Response) (*FetchSensitiv
 			return nil, err
 		}
 		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
 		var dest ErrorResponse

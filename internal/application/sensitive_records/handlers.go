@@ -5,6 +5,7 @@ import "github.com/SpaceSlow/gophkeeper/internal/domain/sensitive_records"
 type Repository interface {
 	CreateSensitiveRecord(sensitiveRecord *sensitive_records.SensitiveRecord) (*sensitive_records.SensitiveRecord, error)
 	CreateSensitiveRecordData(data *sensitive_records.SensitiveRecordData) error
+	FetchSensitiveRecordData(id int) (*sensitive_records.SensitiveRecordData, error)
 	ListSensitiveRecords(userID int) ([]sensitive_records.SensitiveRecord, error)
 	IsSensitiveRecordOwner(id, userID int) (bool, error)
 	Close()

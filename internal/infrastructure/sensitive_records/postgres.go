@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-
 	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -58,21 +58,32 @@ func (r *PostgresRepo) IsSensitiveRecordOwner(id, userID int) (bool, error) {
 }
 
 func (r *PostgresRepo) CreateSensitiveRecordData(data *sensitive_records.SensitiveRecordData) error {
-	binData, err := data.DataAsBytes()
-	if err != nil {
-		return err
-	}
-
-	_, err = r.pool.Exec(
+	_, err := r.pool.Exec(
 		r.ctx,
 		`INSERT INTO sensitive_datas(sensitive_record_id, data) VALUES ($1, $2)`,
-		data.SensitiveRecordID(), binData,
+		data.SensitiveRecordID(), data.Data(),
 	)
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
 		return sensitive_records.NewExistSensitiveRecordDataError(data.SensitiveRecordID())
 	}
 	return err
+}
+
+func (r *PostgresRepo) FetchSensitiveRecordData(id int) (*sensitive_records.SensitiveRecordData, error) {
+	row := r.pool.QueryRow(
+		r.ctx,
+		`SELECT data FROM sensitive_datas WHERE sensitive_record_id=$1`,
+		id,
+	)
+	var data []byte
+	if err := row.Scan(&data); errors.Is(err, pgx.ErrNoRows) {
+		return nil, sensitive_records.NewNotExistSensitiveRecordDataError(id)
+	} else if err != nil {
+		return nil, err
+	}
+	sensitiveRecordData, err := sensitive_records.NewSensitiveRecordData(id, data)
+	return sensitiveRecordData, err
 }
 
 func (r *PostgresRepo) ListSensitiveRecords(userID int) ([]sensitive_records.SensitiveRecord, error) {

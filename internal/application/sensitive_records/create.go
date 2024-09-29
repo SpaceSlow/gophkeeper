@@ -2,6 +2,7 @@ package sensitive_records
 
 import (
 	"errors"
+	"io"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -57,13 +58,18 @@ func (h *SensitiveRecordHandlers) PostSensitiveRecordData(c *gin.Context, id int
 		return
 	}
 
-	data, err := c.Request.GetBody()
+	body, err := c.Request.GetBody()
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
-	defer data.Close()
+	defer body.Close()
 
+	data, err := io.ReadAll(body)
+	if err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
 	recordData, err := sensitive_records.NewSensitiveRecordData(id, data)
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
