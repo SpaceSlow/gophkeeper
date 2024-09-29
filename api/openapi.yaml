@@ -146,7 +146,7 @@ paths:
           description: Internal error on server
       security:
         - auth: []
-  /sensitive_records/{id}:
+  /sensitive_records/{id}/data:
     post:
       tags:
         - sensitive records
@@ -238,6 +238,7 @@ paths:
           description: Internal error on server
       security:
         - auth: []
+  /sensitive_records/{id}:
     delete:
       tags:
         - sensitive records

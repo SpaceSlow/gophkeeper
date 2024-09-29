@@ -29,10 +29,10 @@ type ServerInterface interface {
 	// (DELETE /sensitive_records/{id})
 	DeleteSensitiveRecordWithID(c *gin.Context, id int)
 	// Returns data for sensitive record with {id}
-	// (GET /sensitive_records/{id})
+	// (GET /sensitive_records/{id}/data)
 	FetchSensitiveRecordWithID(c *gin.Context, id int)
 	// Upload binary data of sensitive record
-	// (POST /sensitive_records/{id})
+	// (POST /sensitive_records/{id}/data)
 	PostSensitiveRecordData(c *gin.Context, id int)
 }
 
@@ -211,6 +211,6 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.GET(options.BaseURL+"/sensitive_records", wrapper.ListSensitiveRecords)
 	router.POST(options.BaseURL+"/sensitive_records", wrapper.PostSensitiveRecord)
 	router.DELETE(options.BaseURL+"/sensitive_records/:id", wrapper.DeleteSensitiveRecordWithID)
-	router.GET(options.BaseURL+"/sensitive_records/:id", wrapper.FetchSensitiveRecordWithID)
-	router.POST(options.BaseURL+"/sensitive_records/:id", wrapper.PostSensitiveRecordData)
+	router.GET(options.BaseURL+"/sensitive_records/:id/data", wrapper.FetchSensitiveRecordWithID)
+	router.POST(options.BaseURL+"/sensitive_records/:id/data", wrapper.PostSensitiveRecordData)
 }

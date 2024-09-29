@@ -434,7 +434,7 @@ func NewFetchSensitiveRecordWithIDRequest(server string, id int) (*http.Request,
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/sensitive_records/%s", pathParam0)
+	operationPath := fmt.Sprintf("/sensitive_records/%s/data", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -468,7 +468,7 @@ func NewPostSensitiveRecordDataRequestWithBody(server string, id int, contentTyp
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/sensitive_records/%s", pathParam0)
+	operationPath := fmt.Sprintf("/sensitive_records/%s/data", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
