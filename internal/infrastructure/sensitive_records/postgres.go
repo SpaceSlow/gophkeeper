@@ -45,6 +45,24 @@ func (r *PostgresRepo) CreateSensitiveRecord(record *sensitive_records.Sensitive
 	return newRecord, nil
 }
 
+func (r *PostgresRepo) DeleteSensitiveRecord(id int) error {
+	tx, err := r.pool.BeginTx(r.ctx, pgx.TxOptions{})
+	if err != nil {
+		return err
+	}
+	_, err = tx.Exec(r.ctx, `DELETE FROM sensitive_datas WHERE sensitive_record_id=$1`, id)
+	if err != nil {
+		tx.Rollback(r.ctx)
+		return err
+	}
+	_, err = tx.Exec(r.ctx, `DELETE FROM sensitive_records WHERE id=$1`, id)
+	if err != nil {
+		tx.Rollback(r.ctx)
+		return err
+	}
+	return tx.Commit(r.ctx)
+}
+
 func (r *PostgresRepo) IsSensitiveRecordOwner(id, userID int) (bool, error) {
 	row := r.pool.QueryRow(
 		r.ctx,

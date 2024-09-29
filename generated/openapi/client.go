@@ -658,6 +658,7 @@ type DeleteSensitiveRecordWithIDResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
 }
 
 // Status returns HTTPResponse.Status
@@ -985,6 +986,13 @@ func ParseDeleteSensitiveRecordWithIDResponse(rsp *http.Response) (*DeleteSensit
 			return nil, err
 		}
 		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
 
 	}
 
