@@ -2,12 +2,12 @@ package sensitive_records
 
 import (
 	"errors"
-	"github.com/SpaceSlow/gophkeeper/internal/domain/sensitive_records"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 
 	"github.com/SpaceSlow/gophkeeper/generated/openapi"
+	"github.com/SpaceSlow/gophkeeper/internal/domain/sensitive_records"
 	"github.com/SpaceSlow/gophkeeper/pkg/crypto"
 )
 
