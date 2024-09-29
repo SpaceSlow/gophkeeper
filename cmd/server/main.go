@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	if err := internal.Run(); err != nil {
+	if err := internal.RunServer(); err != nil {
 		log.Fatalf("Error occured while setup server: %s.\r\nExiting...", err)
 	}
 }

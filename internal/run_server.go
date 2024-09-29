@@ -16,7 +16,7 @@ import (
 	"github.com/SpaceSlow/gophkeeper/internal/infrastructure/users"
 )
 
-func Run() error {
+func RunServer() error {
 	rootCtx, cancelCtx := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	defer cancelCtx()
 
