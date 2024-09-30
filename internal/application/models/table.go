@@ -69,6 +69,8 @@ func (m TableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case tea.KeyEnter:
 			i, _ := strconv.Atoi(m.table.SelectedRow()[0])
 			return NewSensitiveRecordModel(m.ctx, m.client, i-1, &m.sensitiveRecords[i-1]), cmd
+		case tea.KeyCtrlN:
+			return NewChoiceCreateSensitiveRecordModel(m.ctx, m.client), nil
 		case tea.KeyEsc:
 			return NewMainModel(m.ctx, "https://localhost/api/"), nil
 		case tea.KeyCtrlC:
