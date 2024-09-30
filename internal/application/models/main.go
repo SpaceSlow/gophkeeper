@@ -39,8 +39,8 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return NewRegisterModel(m.ctx, m.client, m.address), nil
 		case "2":
 			return NewLoginModel(m.ctx, m.client, m.address), nil
-		case "ctrl+c", "q":
-			return nil, tea.Quit
+		case "ctrl+c", "esc":
+			return m, tea.Quit
 		}
 	}
 	return m, nil
