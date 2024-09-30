@@ -21,7 +21,7 @@ type LoginModel struct {
 }
 
 func NewLoginModel(ctx context.Context, client *openapi.ClientWithResponses, address string) tea.Model {
-	var inputs = make([]textinput.Model, 3)
+	var inputs = make([]textinput.Model, 2)
 	inputs[username] = textinput.New()
 	inputs[username].Placeholder = "username"
 	inputs[username].Focus()
