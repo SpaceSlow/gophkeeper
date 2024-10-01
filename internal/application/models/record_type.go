@@ -61,7 +61,7 @@ func (m ChoiceCreateSensitiveRecordModel) Update(msg tea.Msg) (tea.Model, tea.Cm
 		case "enter":
 			switch openapi.SensitiveRecordTypeEnum(m.list.SelectedItem().(item)) {
 			case openapi.PaymentCard:
-				return NewPaymentCardModel(m.ctx, m.client), nil
+				return NewCreatePaymentCardModel(m.ctx, m.client), nil
 			}
 		case "esc":
 			return NewTableModel(m.ctx, m.client), nil

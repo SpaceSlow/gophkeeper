@@ -20,9 +20,10 @@ const (
 	ccn = iota
 	exp
 	cvv
+	metadata
 )
 
-type PaymentCardModel struct {
+type PaymentCardFormModel struct {
 	ctx    context.Context
 	client *openapi.ClientWithResponses
 
@@ -69,7 +70,7 @@ func cvvValidator(s string) error {
 	return err
 }
 
-func NewPaymentCardModel(ctx context.Context, client *openapi.ClientWithResponses) tea.Model {
+func NewPaymentCardFormModel(ctx context.Context, client *openapi.ClientWithResponses) tea.Model {
 	var inputs = make([]textinput.Model, 3)
 	inputs[ccn] = textinput.New()
 	inputs[ccn].Placeholder = "4505 **** **** 1234"
@@ -93,7 +94,13 @@ func NewPaymentCardModel(ctx context.Context, client *openapi.ClientWithResponse
 	inputs[cvv].Prompt = ""
 	inputs[cvv].Validate = cvvValidator
 
-	return PaymentCardModel{
+	inputs[metadata] = textinput.New()
+	inputs[metadata].Placeholder = "some metadata"
+	inputs[metadata].CharLimit = 100
+	inputs[metadata].Width = 50
+	inputs[metadata].Prompt = ""
+
+	return PaymentCardFormModel{
 		ctx:     ctx,
 		client:  client,
 		inputs:  inputs,
@@ -102,11 +109,11 @@ func NewPaymentCardModel(ctx context.Context, client *openapi.ClientWithResponse
 	}
 }
 
-func (m PaymentCardModel) Init() tea.Cmd {
+func (m PaymentCardFormModel) Init() tea.Cmd {
 	return textinput.Blink
 }
 
-func (m PaymentCardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m PaymentCardFormModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds = make([]tea.Cmd, len(m.inputs))
 
 	switch msg := msg.(type) {
@@ -142,7 +149,7 @@ func (m PaymentCardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func (m PaymentCardModel) View() string {
+func (m PaymentCardFormModel) View() string {
 	return fmt.Sprintf(` %s
  %s
 
@@ -161,11 +168,11 @@ func (m PaymentCardModel) View() string {
 	) + "\n"
 }
 
-func (m *PaymentCardModel) nextInput() {
+func (m *PaymentCardFormModel) nextInput() {
 	m.focused = (m.focused + 1) % len(m.inputs)
 }
 
-func (m *PaymentCardModel) prevInput() {
+func (m *PaymentCardFormModel) prevInput() {
 	m.focused--
 	if m.focused < 0 {
 		m.focused = len(m.inputs) - 1
