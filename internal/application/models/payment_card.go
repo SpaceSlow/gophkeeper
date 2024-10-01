@@ -1,11 +1,14 @@
 package models
 
 import (
+	"bytes"
 	"context"
+	"encoding/gob"
 	"fmt"
 	"strconv"
 	"strings"
 
+	"github.com/SpaceSlow/gophkeeper/internal/domain/sensitive_records"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 
@@ -121,7 +124,32 @@ func (m PaymentCardFormModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.Type {
 		case tea.KeyEnter:
 			if m.focused == len(m.inputs)-1 {
-				return m, tea.Quit
+				response, _ := m.client.PostSensitiveRecordWithResponse(m.ctx, openapi.PostSensitiveRecordJSONRequestBody{
+					Metadata: m.inputs[metadata].Value(),
+					Type:     openapi.PaymentCard,
+				})
+				var data bytes.Buffer
+				enc := gob.NewEncoder(&data)
+				exps := strings.Split(m.inputs[exp].Value(), "/")
+				expMonth, _ := strconv.ParseUint(exps[0], 10, 64)
+				expYear, _ := strconv.ParseUint(exps[1], 10, 64)
+				code, _ := strconv.ParseInt(m.inputs[cvv].Value(), 10, 64)
+
+				paymentCard := sensitive_records.PaymentCard{
+					Number:     m.inputs[ccn].Value(),
+					ExpMonth:   uint8(expMonth),
+					ExpYear:    uint8(expYear),
+					Cardholder: "Test Testov",
+					Code:       int16(code),
+				}
+				enc.Encode(paymentCard)
+				_, _ = m.client.PostSensitiveRecordDataWithBodyWithResponse(
+					m.ctx,
+					response.JSON201.Id,
+					"application/octet-stream",
+					&data,
+				)
+				return m, nil
 			}
 			m.nextInput()
 		case tea.KeyShiftTab:
