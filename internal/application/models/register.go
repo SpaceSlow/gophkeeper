@@ -67,6 +67,10 @@ func (m *RegisterModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case tea.KeyTab, tea.KeyDown:
 			m.nextInput()
 		case tea.KeyEnter:
+			if m.focused < len(m.inputs)-1 {
+				m.nextInput()
+				break
+			}
 			if !m.register(m.inputs[username].Value(), m.inputs[password].Value(), m.inputs[repeatedPassword].Value()) {
 				return m, nil
 			}
