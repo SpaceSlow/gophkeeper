@@ -149,7 +149,7 @@ func (m PaymentCardFormModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					"application/octet-stream",
 					&data,
 				)
-				return m, nil
+				return NewPaymentCardModel(m.ctx, m.client, &paymentCard, m.inputs[metadata].Value()), nil
 			}
 			m.nextInput()
 		case tea.KeyShiftTab:
@@ -205,4 +205,63 @@ func (m *PaymentCardFormModel) prevInput() {
 	if m.focused < 0 {
 		m.focused = len(m.inputs) - 1
 	}
+}
+
+type PaymentCardModel struct {
+	ctx    context.Context
+	client *openapi.ClientWithResponses
+
+	paymentCard *sensitive_records.PaymentCard
+	metadata    string
+}
+
+func NewPaymentCardModel(
+	ctx context.Context,
+	client *openapi.ClientWithResponses,
+	paymentCard *sensitive_records.PaymentCard,
+	metadata string,
+) tea.Model {
+	return PaymentCardModel{
+		ctx:         ctx,
+		client:      client,
+		paymentCard: paymentCard,
+		metadata:    metadata,
+	}
+}
+
+func (m PaymentCardModel) Init() tea.Cmd {
+	return textinput.Blink
+}
+
+func (m PaymentCardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.Type {
+		case tea.KeyEsc:
+			return NewTableModel(m.ctx, m.client), nil
+		case tea.KeyCtrlC:
+			return m, tea.Quit
+		}
+	}
+
+	return m, nil
+}
+
+func (m PaymentCardModel) View() string {
+	return fmt.Sprintf(` %s
+ %s
+
+ %s  %s
+ %d/%d  %d\n\n
+ Metadata: %s
+`,
+		"Card Number",
+		m.paymentCard.Number,
+		"EXP",
+		"CVV",
+		m.paymentCard.ExpMonth,
+		m.paymentCard.ExpYear,
+		m.paymentCard.Code,
+		m.metadata,
+	)
 }
