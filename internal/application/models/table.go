@@ -1,7 +1,9 @@
 package models
 
 import (
+	"bytes"
 	"context"
+	"encoding/gob"
 	"strconv"
 
 	"github.com/charmbracelet/bubbles/table"
@@ -68,7 +70,17 @@ func (m TableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.Type {
 		case tea.KeyEnter:
 			i, _ := strconv.Atoi(m.table.SelectedRow()[0])
-			return NewSensitiveRecordModel(m.ctx, m.client, i-1, &m.sensitiveRecords[i-1]), cmd
+			sensitiveRecord := m.sensitiveRecords[i-1]
+			switch openapi.SensitiveRecordTypeEnum(sensitiveRecord.Type()) {
+			case openapi.PaymentCard:
+				response, _ := m.client.FetchSensitiveRecordWithIDWithResponse(m.ctx, sensitiveRecord.Id())
+				data := bytes.NewBuffer(response.Body)
+				dec := gob.NewDecoder(data)
+				var paymentCard sensitive_records.PaymentCard
+				dec.Decode(&paymentCard)
+				return NewPaymentCardModel(m.ctx, m.client, &paymentCard, sensitiveRecord.Metadata()), nil
+			}
+			return NewSensitiveRecordModel(m.ctx, m.client, i-1, &sensitiveRecord), cmd
 		case tea.KeyCtrlN:
 			return NewChoiceCreateSensitiveRecordModel(m.ctx, m.client), nil
 		case tea.KeyEsc:
