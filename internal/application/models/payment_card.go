@@ -23,6 +23,7 @@ const (
 	ccn = iota
 	exp
 	cvv
+	cardholder
 	metadata
 )
 
@@ -74,7 +75,7 @@ func cvvValidator(s string) error {
 }
 
 func NewPaymentCardFormModel(ctx context.Context, client *openapi.ClientWithResponses) tea.Model {
-	var inputs = make([]textinput.Model, 4)
+	var inputs = make([]textinput.Model, 5)
 	inputs[ccn] = textinput.New()
 	inputs[ccn].Placeholder = "4505 **** **** 1234"
 	inputs[ccn].Focus()
@@ -96,6 +97,12 @@ func NewPaymentCardFormModel(ctx context.Context, client *openapi.ClientWithResp
 	inputs[cvv].Width = 5
 	inputs[cvv].Prompt = ""
 	inputs[cvv].Validate = cvvValidator
+
+	inputs[cardholder] = textinput.New()
+	inputs[cardholder].Placeholder = "Ivan Ivanov"
+	inputs[cardholder].CharLimit = 20
+	inputs[cardholder].Width = 30
+	inputs[cardholder].Prompt = ""
 
 	inputs[metadata] = textinput.New()
 	inputs[metadata].Placeholder = "some metadata"
@@ -139,7 +146,7 @@ func (m PaymentCardFormModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					Number:     m.inputs[ccn].Value(),
 					ExpMonth:   uint8(expMonth),
 					ExpYear:    uint8(expYear),
-					Cardholder: "Test Testov",
+					Cardholder: m.inputs[cardholder].Value(),
 					Code:       int16(code),
 				}
 				enc.Encode(paymentCard)
@@ -184,7 +191,11 @@ func (m PaymentCardFormModel) View() string {
  %s	%s
  %s	%s
 
+ %s
+ %s
+
  %s: %s
+
  %s
 `,
 		"Card Number",
@@ -193,6 +204,8 @@ func (m PaymentCardFormModel) View() string {
 		"CVV",
 		m.inputs[exp].View(),
 		m.inputs[cvv].View(),
+		"Cardholder",
+		m.inputs[cardholder].View(),
 		"Metadata",
 		m.inputs[metadata].View(),
 		"Continue ->",
@@ -257,6 +270,9 @@ func (m PaymentCardModel) View() string {
  %s	%s
  %d/%d	%d
 
+ %s
+ %s
+
  %s: %s
 `,
 		"Card Number",
@@ -266,6 +282,8 @@ func (m PaymentCardModel) View() string {
 		m.paymentCard.ExpMonth,
 		m.paymentCard.ExpYear,
 		m.paymentCard.Code,
+		"Cardholder",
+		m.paymentCard.Cardholder,
 		"Metadata",
 		m.metadata,
 	)
