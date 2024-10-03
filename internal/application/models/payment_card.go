@@ -181,9 +181,10 @@ func (m PaymentCardFormModel) View() string {
 	return fmt.Sprintf(` %s
  %s
 
- %s  %s
- %s  %s
+ %s	%s
+ %s	%s
 
+ %s: %s
  %s
 `,
 		"Card Number",
@@ -192,8 +193,10 @@ func (m PaymentCardFormModel) View() string {
 		"CVV",
 		m.inputs[exp].View(),
 		m.inputs[cvv].View(),
+		"Metadata",
+		m.inputs[metadata].View(),
 		"Continue ->",
-	) + "\n"
+	)
 }
 
 func (m *PaymentCardFormModel) nextInput() {
@@ -251,9 +254,10 @@ func (m PaymentCardModel) View() string {
 	return fmt.Sprintf(` %s
  %s
 
- %s  %s
- %d/%d  %d\n\n
- Metadata: %s
+ %s	%s
+ %d/%d	%d
+
+ %s: %s
 `,
 		"Card Number",
 		m.paymentCard.Number,
@@ -262,6 +266,7 @@ func (m PaymentCardModel) View() string {
 		m.paymentCard.ExpMonth,
 		m.paymentCard.ExpYear,
 		m.paymentCard.Code,
+		"Metadata",
 		m.metadata,
 	)
 }
