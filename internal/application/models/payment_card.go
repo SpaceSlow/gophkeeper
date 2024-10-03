@@ -74,7 +74,7 @@ func cvvValidator(s string) error {
 }
 
 func NewPaymentCardFormModel(ctx context.Context, client *openapi.ClientWithResponses) tea.Model {
-	var inputs = make([]textinput.Model, 3)
+	var inputs = make([]textinput.Model, 4)
 	inputs[ccn] = textinput.New()
 	inputs[ccn].Placeholder = "4505 **** **** 1234"
 	inputs[ccn].Focus()
