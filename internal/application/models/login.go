@@ -58,6 +58,10 @@ func (m *LoginModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case tea.KeyTab, tea.KeyDown:
 			m.nextInput()
 		case tea.KeyEnter:
+			if m.focused < len(m.inputs)-1 {
+				m.nextInput()
+				break
+			}
 			m.authenticate(m.inputs[username].Value(), m.inputs[password].Value())
 			return NewTableModel(m.ctx, m.client), nil
 		case tea.KeyEsc:
