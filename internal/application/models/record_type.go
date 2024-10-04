@@ -12,7 +12,7 @@ import (
 	"github.com/SpaceSlow/gophkeeper/generated/openapi"
 )
 
-const listHeight = 14
+const listHeight = 10
 
 type item string
 
@@ -62,6 +62,8 @@ func (m ChoiceCreateSensitiveRecordModel) Update(msg tea.Msg) (tea.Model, tea.Cm
 			switch openapi.SensitiveRecordTypeEnum(m.list.SelectedItem().(item)) {
 			case openapi.PaymentCard:
 				return NewPaymentCardFormModel(m.ctx, m.client), nil
+			case openapi.Text:
+				return NewTextFormModel(m.ctx, m.client), nil
 			}
 		case "esc":
 			return NewTableModel(m.ctx, m.client), nil

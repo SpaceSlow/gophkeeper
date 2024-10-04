@@ -25,38 +25,13 @@ func NewTableModel(
 	ctx context.Context,
 	client *openapi.ClientWithResponses,
 ) tea.Model {
-	records, _ := client.ListSensitiveRecordsWithResponse(ctx)
-
-	sensitiveRecords := make([]sensitive_records.SensitiveRecord, 0, len(records.JSON200.SensitiveRecords))
-	for _, record := range records.JSON200.SensitiveRecords {
-		r, _ := sensitive_records.NewSensitiveRecord(record.Id, 0, string(record.Type), record.Metadata)
-		sensitiveRecords = append(sensitiveRecords, *r)
+	model := &TableModel{
+		ctx:    ctx,
+		client: client,
 	}
-
-	columns := []table.Column{
-		{Title: "№", Width: 4},
-		{Title: "metadata", Width: 70},
-	}
-
-	rows := make([]table.Row, 0, len(sensitiveRecords))
-
-	for i, r := range sensitiveRecords {
-		rows = append(rows, []string{strconv.Itoa(i + 1), r.Metadata()})
-	}
-
-	t := table.New(
-		table.WithColumns(columns),
-		table.WithRows(rows),
-		table.WithFocused(true),
-		table.WithHeight(7),
-	)
-
-	return &TableModel{
-		ctx:              ctx,
-		client:           client,
-		table:            t,
-		sensitiveRecords: sensitiveRecords,
-	}
+	model.fetchSensitiveRecords()
+	model.fillTable()
+	return model
 }
 
 func (m TableModel) Init() tea.Cmd {
@@ -71,14 +46,18 @@ func (m TableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case tea.KeyEnter:
 			i, _ := strconv.Atoi(m.table.SelectedRow()[0])
 			sensitiveRecord := m.sensitiveRecords[i-1]
+			response, _ := m.client.FetchSensitiveRecordWithIDWithResponse(m.ctx, sensitiveRecord.Id())
+			data := bytes.NewBuffer(response.Body)
+			dec := gob.NewDecoder(data)
 			switch openapi.SensitiveRecordTypeEnum(sensitiveRecord.Type()) {
 			case openapi.PaymentCard:
-				response, _ := m.client.FetchSensitiveRecordWithIDWithResponse(m.ctx, sensitiveRecord.Id())
-				data := bytes.NewBuffer(response.Body)
-				dec := gob.NewDecoder(data)
 				var paymentCard sensitive_records.PaymentCard
 				dec.Decode(&paymentCard)
 				return NewPaymentCardModel(m.ctx, m.client, &paymentCard, sensitiveRecord.Metadata()), nil
+			case openapi.Text:
+				var text sensitive_records.Text
+				dec.Decode(&text)
+				return NewTextModel(m.ctx, m.client, &text, sensitiveRecord.Metadata()), nil
 			}
 			return NewSensitiveRecordModel(m.ctx, m.client, i-1, &sensitiveRecord), cmd
 		case tea.KeyCtrlN:
@@ -97,7 +76,7 @@ func (m TableModel) View() string {
 	return m.table.View() + "\n  " + m.table.HelpView() + "\n"
 }
 
-func (m TableModel) FetchSensitiveRecords() {
+func (m *TableModel) fetchSensitiveRecords() {
 	records, _ := m.client.ListSensitiveRecordsWithResponse(m.ctx)
 
 	sensitiveRecords := make([]sensitive_records.SensitiveRecord, 0, len(records.JSON200.SensitiveRecords))
@@ -106,14 +85,18 @@ func (m TableModel) FetchSensitiveRecords() {
 		sensitiveRecords = append(sensitiveRecords, *r)
 	}
 
+	m.sensitiveRecords = sensitiveRecords
+}
+
+func (m *TableModel) fillTable() {
 	columns := []table.Column{
 		{Title: "№", Width: 4},
 		{Title: "metadata", Width: 70},
 	}
 
-	rows := make([]table.Row, 0, len(sensitiveRecords))
+	rows := make([]table.Row, 0, len(m.sensitiveRecords))
 
-	for i, r := range sensitiveRecords {
+	for i, r := range m.sensitiveRecords {
 		rows = append(rows, []string{strconv.Itoa(i + 1), r.Metadata()})
 	}
 
@@ -121,6 +104,6 @@ func (m TableModel) FetchSensitiveRecords() {
 		table.WithColumns(columns),
 		table.WithRows(rows),
 		table.WithFocused(true),
-		table.WithHeight(7),
+		table.WithHeight(20),
 	)
 }
