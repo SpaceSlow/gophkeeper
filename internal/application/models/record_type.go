@@ -64,6 +64,8 @@ func (m ChoiceCreateSensitiveRecordModel) Update(msg tea.Msg) (tea.Model, tea.Cm
 				return NewPaymentCardFormModel(m.ctx, m.client), nil
 			case openapi.Text:
 				return NewTextFormModel(m.ctx, m.client), nil
+			case openapi.Credential:
+				return NewCredentialFormModel(m.ctx, m.client), nil
 			}
 		case "esc":
 			return NewTableModel(m.ctx, m.client), nil
