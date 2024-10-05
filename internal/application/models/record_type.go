@@ -66,6 +66,9 @@ func (m ChoiceCreateSensitiveRecordModel) Update(msg tea.Msg) (tea.Model, tea.Cm
 				return NewTextFormModel(m.ctx, m.client), nil
 			case openapi.Credential:
 				return NewCredentialFormModel(m.ctx, m.client), nil
+			case openapi.Binary:
+				model := NewBinaryFormModel(m.ctx, m.client)
+				return model, model.Init()
 			}
 		case "esc":
 			return NewTableModel(m.ctx, m.client), nil

@@ -62,8 +62,11 @@ func (m TableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				var credential sensitive_records.Credential
 				dec.Decode(&credential)
 				return NewCredentialModel(m.ctx, m.client, &credential, sensitiveRecord.Metadata()), nil
+			case openapi.Binary:
+				var binary sensitive_records.Binary
+				dec.Decode(&binary)
+				return NewBinaryModel(m.ctx, m.client, &binary, sensitiveRecord.Metadata()), nil
 			}
-			return NewSensitiveRecordModel(m.ctx, m.client, i-1, &sensitiveRecord), cmd
 		case tea.KeyCtrlN:
 			return NewChoiceCreateSensitiveRecordModel(m.ctx, m.client), nil
 		case tea.KeyEsc:
