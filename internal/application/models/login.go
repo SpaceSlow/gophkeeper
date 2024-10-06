@@ -3,16 +3,16 @@ package models
 import (
 	"context"
 	"fmt"
-	"github.com/SpaceSlow/gophkeeper/internal/application/models/keys"
-	"github.com/charmbracelet/bubbles/help"
-	"github.com/charmbracelet/bubbles/key"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/oapi-codegen/oapi-codegen/v2/pkg/securityprovider"
 
 	"github.com/SpaceSlow/gophkeeper/generated/openapi"
+	"github.com/SpaceSlow/gophkeeper/internal/application/models/keys"
 )
 
 type LoginModel struct {
