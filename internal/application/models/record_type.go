@@ -6,10 +6,13 @@ import (
 	"io"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 
 	"github.com/SpaceSlow/gophkeeper/generated/openapi"
+	"github.com/SpaceSlow/gophkeeper/internal/application/models/keys"
 )
 
 const listHeight = 10
@@ -48,6 +51,9 @@ type ChoiceCreateSensitiveRecordModel struct {
 	client *openapi.ClientWithResponses
 
 	list list.Model
+
+	keys keys.ChoiceFormKeyMap
+	help help.Model
 }
 
 func (m ChoiceCreateSensitiveRecordModel) Init() tea.Cmd {
@@ -56,9 +62,11 @@ func (m ChoiceCreateSensitiveRecordModel) Init() tea.Cmd {
 
 func (m ChoiceCreateSensitiveRecordModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.help.Width = msg.Width
 	case tea.KeyMsg:
-		switch keypress := msg.String(); keypress {
-		case "enter":
+		switch {
+		case key.Matches(msg, m.keys.Select):
 			switch openapi.SensitiveRecordTypeEnum(m.list.SelectedItem().(item)) {
 			case openapi.PaymentCard:
 				return NewPaymentCardFormModel(m.ctx, m.client), nil
@@ -70,9 +78,9 @@ func (m ChoiceCreateSensitiveRecordModel) Update(msg tea.Msg) (tea.Model, tea.Cm
 				model := NewBinaryFormModel(m.ctx, m.client)
 				return model, model.Init()
 			}
-		case "esc":
+		case key.Matches(msg, m.keys.Back):
 			return NewTableModel(m.ctx, m.client), nil
-		case "ctrl+c":
+		case key.Matches(msg, m.keys.Quit):
 			return m, tea.Quit
 		}
 	}
@@ -83,7 +91,11 @@ func (m ChoiceCreateSensitiveRecordModel) Update(msg tea.Msg) (tea.Model, tea.Cm
 }
 
 func (m ChoiceCreateSensitiveRecordModel) View() string {
-	return m.list.View()
+	list := m.list.View()
+
+	helpView := m.help.View(m.keys)
+	height := 20 - strings.Count(list, "\n") - strings.Count(helpView, "\n")
+	return "\n" + list + strings.Repeat("\n", height) + helpView
 }
 
 func NewChoiceCreateSensitiveRecordModel(ctx context.Context, client *openapi.ClientWithResponses) ChoiceCreateSensitiveRecordModel {
@@ -99,7 +111,18 @@ func NewChoiceCreateSensitiveRecordModel(ctx context.Context, client *openapi.Cl
 	l := list.New(items, itemDelegate{}, defaultWidth, listHeight)
 	l.Title = "What do you want to create sensitive record?"
 	l.SetShowStatusBar(false)
+	l.SetHeight(15)
+	l.SetWidth(50)
+	l.SetShowHelp(false)
 	l.SetFilteringEnabled(false)
 
-	return ChoiceCreateSensitiveRecordModel{ctx: ctx, client: client, list: l}
+	helpModel := help.New()
+	helpModel.ShowAll = true
+	return ChoiceCreateSensitiveRecordModel{
+		ctx:    ctx,
+		client: client,
+		list:   l,
+		keys:   keys.ChoiceFormKeys,
+		help:   helpModel,
+	}
 }
