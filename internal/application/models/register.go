@@ -3,10 +3,15 @@ package models
 import (
 	"context"
 	"fmt"
+	"strings"
 
-	"github.com/SpaceSlow/gophkeeper/generated/openapi"
+	"github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+
+	"github.com/SpaceSlow/gophkeeper/generated/openapi"
+	"github.com/SpaceSlow/gophkeeper/internal/application/models/keys"
 )
 
 const (
@@ -22,6 +27,9 @@ type RegisterModel struct {
 
 	inputs  []textinput.Model
 	focused int
+
+	keys keys.RegisterKeyMap
+	help help.Model
 }
 
 func NewRegisterModel(ctx context.Context, client *openapi.ClientWithResponses, address string) tea.Model {
@@ -42,6 +50,8 @@ func NewRegisterModel(ctx context.Context, client *openapi.ClientWithResponses, 
 	inputs[repeatedPassword].CharLimit = 20
 	inputs[repeatedPassword].Width = 20
 
+	helpModel := help.New()
+	helpModel.ShowAll = true
 	return &RegisterModel{
 		ctx:     ctx,
 		client:  client,
@@ -49,6 +59,9 @@ func NewRegisterModel(ctx context.Context, client *openapi.ClientWithResponses, 
 
 		inputs:  inputs,
 		focused: 0,
+
+		keys: keys.RegisterKeys,
+		help: helpModel,
 	}
 }
 
@@ -60,13 +73,15 @@ func (m *RegisterModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds = make([]tea.Cmd, len(m.inputs))
 
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.help.Width = msg.Width
 	case tea.KeyMsg:
-		switch msg.Type {
-		case tea.KeyShiftTab, tea.KeyUp:
+		switch {
+		case key.Matches(msg, m.keys.PrevInput):
 			m.prevInput()
-		case tea.KeyTab, tea.KeyDown:
+		case key.Matches(msg, m.keys.NextInput):
 			m.nextInput()
-		case tea.KeyEnter:
+		case key.Matches(msg, m.keys.Enter):
 			if m.focused < len(m.inputs)-1 {
 				m.nextInput()
 				break
@@ -75,9 +90,9 @@ func (m *RegisterModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			}
 			return NewLoginModel(m.ctx, m.client, m.address), nil
-		case tea.KeyEsc:
+		case key.Matches(msg, m.keys.Back):
 			return NewMainModel(m.ctx, m.address), nil
-		case tea.KeyCtrlC:
+		case key.Matches(msg, m.keys.Quit):
 			return m, tea.Quit
 		}
 		for i := range m.inputs {
@@ -95,11 +110,11 @@ func (m *RegisterModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m *RegisterModel) View() string {
-	return fmt.Sprintf(
-		`Register Form:
-%s: %s
-%s: %s
-%s: %s
+	registerForm := fmt.Sprintf(
+		` Register Form:
+ %s: %s
+ %s: %s
+ %s: %s
 `,
 		"username",
 		m.inputs[username].View(),
@@ -108,6 +123,10 @@ func (m *RegisterModel) View() string {
 		"repeat",
 		m.inputs[repeatedPassword].View(),
 	) + "\n"
+
+	helpView := m.help.View(m.keys)
+	height := 20 - strings.Count(registerForm, "\n") - strings.Count(helpView, "\n")
+	return "\n" + registerForm + strings.Repeat("\n", height) + helpView
 }
 
 func (m *RegisterModel) register(username, password, repeatedPassword string) bool {
