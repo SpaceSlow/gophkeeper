@@ -5,11 +5,15 @@ import (
 	"context"
 	"encoding/gob"
 	"strconv"
+	"strings"
 
+	"github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
 
 	"github.com/SpaceSlow/gophkeeper/generated/openapi"
+	"github.com/SpaceSlow/gophkeeper/internal/application/models/keys"
 	"github.com/SpaceSlow/gophkeeper/internal/domain/sensitive_records"
 )
 
@@ -19,15 +23,23 @@ type TableModel struct {
 	table  table.Model
 
 	sensitiveRecords []sensitive_records.SensitiveRecord
+
+	keys keys.TableKeyMap
+	help help.Model
 }
 
 func NewTableModel(
 	ctx context.Context,
 	client *openapi.ClientWithResponses,
 ) tea.Model {
+	helpModel := help.New()
+	helpModel.ShowAll = true
 	model := &TableModel{
 		ctx:    ctx,
 		client: client,
+
+		keys: keys.TableKeys,
+		help: helpModel,
 	}
 	model.fetchSensitiveRecords()
 	model.fillTable()
@@ -41,9 +53,11 @@ func (m TableModel) Init() tea.Cmd {
 func (m TableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.help.Width = msg.Width
 	case tea.KeyMsg:
-		switch msg.Type {
-		case tea.KeyEnter:
+		switch {
+		case key.Matches(msg, m.keys.Open):
 			i, _ := strconv.Atoi(m.table.SelectedRow()[0])
 			sensitiveRecord := m.sensitiveRecords[i-1]
 			response, _ := m.client.FetchSensitiveRecordWithIDWithResponse(m.ctx, sensitiveRecord.Id())
@@ -67,11 +81,11 @@ func (m TableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				dec.Decode(&binary)
 				return NewBinaryModel(m.ctx, m.client, &binary, sensitiveRecord.Metadata()), nil
 			}
-		case tea.KeyCtrlN:
+		case key.Matches(msg, m.keys.Create):
 			return NewChoiceCreateSensitiveRecordModel(m.ctx, m.client), nil
-		case tea.KeyEsc:
+		case key.Matches(msg, m.keys.Back):
 			return NewMainModel(m.ctx, "https://localhost/api/"), nil
-		case tea.KeyCtrlC:
+		case key.Matches(msg, m.keys.Quit):
 			return m, tea.Quit
 		}
 	}
@@ -80,7 +94,11 @@ func (m TableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m TableModel) View() string {
-	return m.table.View() + "\n  " + m.table.HelpView() + "\n"
+	table := m.table.View()
+
+	helpView := m.help.View(m.keys)
+	height := 20 - strings.Count(table, "\n") - strings.Count(helpView, "\n")
+	return "\n" + table + strings.Repeat("\n", height) + helpView
 }
 
 func (m *TableModel) fetchSensitiveRecords() {
@@ -111,6 +129,6 @@ func (m *TableModel) fillTable() {
 		table.WithColumns(columns),
 		table.WithRows(rows),
 		table.WithFocused(true),
-		table.WithHeight(20),
+		table.WithHeight(15),
 	)
 }
