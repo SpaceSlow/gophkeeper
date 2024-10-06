@@ -16,7 +16,7 @@ func (k RegisterKeyMap) ShortHelp() []key.Binding {
 
 func (k RegisterKeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
-		{k.NextInput, k.PrevInput, k.Enter},
+		{k.PrevInput, k.NextInput, k.Enter},
 		{k.Back, k.Quit},
 	}
 }
