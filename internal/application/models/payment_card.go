@@ -8,14 +8,14 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/SpaceSlow/gophkeeper/internal/application/models/keys"
-	"github.com/SpaceSlow/gophkeeper/internal/domain/sensitive_records"
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 
 	"github.com/SpaceSlow/gophkeeper/generated/openapi"
+	"github.com/SpaceSlow/gophkeeper/internal/application/models/keys"
+	"github.com/SpaceSlow/gophkeeper/internal/domain/sensitive_records"
 )
 
 type (
