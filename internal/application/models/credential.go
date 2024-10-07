@@ -5,11 +5,15 @@ import (
 	"context"
 	"encoding/gob"
 	"fmt"
+	"strings"
 
+	"github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 
 	"github.com/SpaceSlow/gophkeeper/generated/openapi"
+	"github.com/SpaceSlow/gophkeeper/internal/application/models/keys"
 	"github.com/SpaceSlow/gophkeeper/internal/domain/sensitive_records"
 )
 
@@ -25,6 +29,9 @@ type CredentialFormModel struct {
 
 	inputs  []textinput.Model
 	focused int
+
+	keys keys.CredentialFormKeyMap
+	help help.Model
 }
 
 func NewCredentialFormModel(ctx context.Context, client *openapi.ClientWithResponses) tea.Model {
@@ -48,11 +55,16 @@ func NewCredentialFormModel(ctx context.Context, client *openapi.ClientWithRespo
 	inputs[credentialMetadata].Width = 50
 	inputs[credentialMetadata].Prompt = ""
 
+	helpModel := help.New()
+	helpModel.ShowAll = true
 	return CredentialFormModel{
 		ctx:     ctx,
 		client:  client,
 		inputs:  inputs,
 		focused: 0,
+
+		keys: keys.CredentialFormKeys,
+		help: helpModel,
 	}
 }
 
@@ -64,9 +76,11 @@ func (m CredentialFormModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds = make([]tea.Cmd, len(m.inputs))
 
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.help.Width = msg.Width
 	case tea.KeyMsg:
-		switch msg.Type {
-		case tea.KeyEnter:
+		switch {
+		case key.Matches(msg, m.keys.Enter):
 			if m.focused < len(m.inputs)-1 {
 				m.nextInput()
 				break
@@ -90,13 +104,13 @@ func (m CredentialFormModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				&data,
 			)
 			return NewCredentialModel(m.ctx, m.client, &credential, m.inputs[credentialMetadata].Value()), nil
-		case tea.KeyShiftTab:
+		case key.Matches(msg, m.keys.PrevInput):
 			m.prevInput()
-		case tea.KeyTab:
+		case key.Matches(msg, m.keys.NextInput):
 			m.nextInput()
-		case tea.KeyEsc:
+		case key.Matches(msg, m.keys.Back):
 			return NewTableModel(m.ctx, m.client), nil
-		case tea.KeyCtrlC:
+		case key.Matches(msg, m.keys.Quit):
 			return m, tea.Quit
 		}
 		for i := range m.inputs {
@@ -112,7 +126,7 @@ func (m CredentialFormModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m CredentialFormModel) View() string {
-	return fmt.Sprintf(` %s
+	form := fmt.Sprintf(` %s
 
  %s: %s
  %s: %s
@@ -130,6 +144,10 @@ func (m CredentialFormModel) View() string {
 		m.inputs[credentialMetadata].View(),
 		"Continue ->",
 	)
+
+	helpView := m.help.View(m.keys)
+	height := 20 - strings.Count(form, "\n") - strings.Count(helpView, "\n")
+	return "\n" + form + strings.Repeat("\n", height) + helpView
 }
 
 func (m *CredentialFormModel) nextInput() {
