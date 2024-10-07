@@ -5,12 +5,16 @@ import (
 	"context"
 	"encoding/gob"
 	"fmt"
+	"strings"
 
+	"github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 
 	"github.com/SpaceSlow/gophkeeper/generated/openapi"
+	"github.com/SpaceSlow/gophkeeper/internal/application/models/keys"
 	"github.com/SpaceSlow/gophkeeper/internal/domain/sensitive_records"
 )
 
@@ -21,6 +25,9 @@ type TextFormModel struct {
 	textArea        textarea.Model
 	metadata        textinput.Model
 	isFocusTextArea bool
+
+	keys keys.TextFormKeyMap
+	help help.Model
 }
 
 func NewTextFormModel(ctx context.Context, client *openapi.ClientWithResponses) tea.Model {
@@ -34,12 +41,16 @@ func NewTextFormModel(ctx context.Context, client *openapi.ClientWithResponses) 
 	metadata.Width = 50
 	metadata.Prompt = ""
 
+	helpModel := help.New()
+	helpModel.ShowAll = true
 	return TextFormModel{
 		ctx:             ctx,
 		client:          client,
 		textArea:        textArea,
 		metadata:        metadata,
 		isFocusTextArea: true,
+		keys:            keys.TextFormKeys,
+		help:            helpModel,
 	}
 }
 
@@ -52,9 +63,11 @@ func (m TextFormModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.help.Width = msg.Width
 	case tea.KeyMsg:
-		switch msg.Type {
-		case tea.KeyEnter:
+		switch {
+		case key.Matches(msg, m.keys.Enter):
 			if m.isFocusTextArea {
 				break
 			}
@@ -76,11 +89,11 @@ func (m TextFormModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				&data,
 			)
 			return NewTextModel(m.ctx, m.client, &text, m.metadata.Value()), nil
-		case tea.KeyShiftTab, tea.KeyTab:
+		case key.Matches(msg, m.keys.PrevInput) || key.Matches(msg, m.keys.NextInput):
 			m.nextInput()
-		case tea.KeyEsc:
+		case key.Matches(msg, m.keys.Back):
 			return NewTableModel(m.ctx, m.client), nil
-		case tea.KeyCtrlC:
+		case key.Matches(msg, m.keys.Quit):
 			return m, tea.Quit
 		}
 	}
@@ -93,7 +106,7 @@ func (m TextFormModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m TextFormModel) View() string {
-	return fmt.Sprintf(` %s
+	form := fmt.Sprintf(` %s
 %s
 
  %s: %s
@@ -106,6 +119,10 @@ func (m TextFormModel) View() string {
 		m.metadata.View(),
 		"Continue ->",
 	)
+
+	helpView := m.help.View(m.keys)
+	height := 20 - strings.Count(form, "\n") - strings.Count(helpView, "\n")
+	return "\n" + form + strings.Repeat("\n", height) + helpView
 }
 
 func (m *TextFormModel) nextInput() {
