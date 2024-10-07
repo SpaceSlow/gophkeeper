@@ -142,6 +142,9 @@ type TextModel struct {
 
 	text     *sensitive_records.Text
 	metadata string
+
+	keys keys.BackQuitKeyMap
+	help help.Model
 }
 
 func NewTextModel(
@@ -155,6 +158,8 @@ func NewTextModel(
 		client:   client,
 		text:     text,
 		metadata: metadata,
+		keys:     keys.BackQuitKeys,
+		help:     help.New(),
 	}
 }
 
@@ -177,7 +182,7 @@ func (m TextModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m TextModel) View() string {
-	return fmt.Sprintf(` %s
+	form := fmt.Sprintf(` %s
  %s
 
  %s: %s
@@ -187,4 +192,8 @@ func (m TextModel) View() string {
 		"Metadata",
 		m.metadata,
 	)
+
+	helpView := m.help.View(m.keys)
+	height := 20 - strings.Count(form, "\n") - strings.Count(helpView, "\n")
+	return "\n" + form + strings.Repeat("\n", height) + helpView
 }
