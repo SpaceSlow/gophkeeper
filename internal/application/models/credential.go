@@ -167,6 +167,9 @@ type CredentialModel struct {
 
 	credential *sensitive_records.Credential
 	metadata   string
+
+	keys keys.BackQuitKeyMap
+	help help.Model
 }
 
 func NewCredentialModel(
@@ -180,6 +183,8 @@ func NewCredentialModel(
 		client:     client,
 		credential: credential,
 		metadata:   metadata,
+		keys:       keys.BackQuitKeys,
+		help:       help.New(),
 	}
 }
 
@@ -189,11 +194,13 @@ func (m CredentialModel) Init() tea.Cmd {
 
 func (m CredentialModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.help.Width = msg.Width
 	case tea.KeyMsg:
-		switch msg.Type {
-		case tea.KeyEsc:
+		switch {
+		case key.Matches(msg, m.keys.Back):
 			return NewTableModel(m.ctx, m.client), nil
-		case tea.KeyCtrlC:
+		case key.Matches(msg, m.keys.Quit):
 			return m, tea.Quit
 		}
 	}
@@ -202,7 +209,7 @@ func (m CredentialModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m CredentialModel) View() string {
-	return fmt.Sprintf(` %s
+	form := fmt.Sprintf(` %s
 
  %s: %s
  %s: %s
@@ -217,4 +224,8 @@ func (m CredentialModel) View() string {
 		"Metadata",
 		m.metadata,
 	)
+
+	helpView := m.help.View(m.keys)
+	height := 20 - strings.Count(form, "\n") - strings.Count(helpView, "\n")
+	return "\n" + form + strings.Repeat("\n", height) + helpView
 }
