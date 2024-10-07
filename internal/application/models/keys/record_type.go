@@ -1,13 +1,16 @@
 package keys
 
-import "github.com/charmbracelet/bubbles/key"
+import (
+	"github.com/charmbracelet/bubbles/key"
+
+	"github.com/SpaceSlow/gophkeeper/pkg/bubblekey"
+)
 
 type ChoiceFormKeyMap struct {
 	PrevChoice key.Binding
 	NextChoice key.Binding
 	Select     key.Binding
 	Back       key.Binding
-	Nil        key.Binding
 	Quit       key.Binding
 }
 
@@ -18,7 +21,7 @@ func (k ChoiceFormKeyMap) ShortHelp() []key.Binding {
 func (k ChoiceFormKeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
 		{k.PrevChoice, k.NextChoice, k.Back},
-		{k.Select, k.Nil, k.Quit},
+		{k.Select, bubblekey.Blank, k.Quit},
 	}
 }
 
@@ -34,10 +37,6 @@ var ChoiceFormKeys = ChoiceFormKeyMap{
 	Select: key.NewBinding(
 		key.WithKeys("enter"),
 		key.WithHelp("enter", "select"),
-	),
-	Nil: key.NewBinding(
-		key.WithKeys(""),
-		key.WithHelp("", ""),
 	),
 	Back: key.NewBinding(
 		key.WithKeys("esc"),

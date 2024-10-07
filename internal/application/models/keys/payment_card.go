@@ -1,12 +1,15 @@
 package keys
 
-import "github.com/charmbracelet/bubbles/key"
+import (
+	"github.com/charmbracelet/bubbles/key"
+
+	"github.com/SpaceSlow/gophkeeper/pkg/bubblekey"
+)
 
 type PaymentCardFormKeyMap struct {
 	PrevInput key.Binding
 	NextInput key.Binding
 	Enter     key.Binding
-	nil       key.Binding
 	Back      key.Binding
 	Quit      key.Binding
 }
@@ -18,7 +21,7 @@ func (k PaymentCardFormKeyMap) ShortHelp() []key.Binding {
 func (k PaymentCardFormKeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
 		{k.PrevInput, k.NextInput, k.Back},
-		{k.Enter, k.nil, k.Quit},
+		{k.Enter, bubblekey.Blank, k.Quit},
 	}
 }
 
@@ -34,10 +37,6 @@ var PaymentCardFormKeys = PaymentCardFormKeyMap{
 	Enter: key.NewBinding(
 		key.WithKeys("enter"),
 		key.WithHelp("enter", "next/send"),
-	),
-	nil: key.NewBinding(
-		key.WithKeys(""),
-		key.WithHelp("", ""),
 	),
 	Back: key.NewBinding(
 		key.WithKeys("esc"),
