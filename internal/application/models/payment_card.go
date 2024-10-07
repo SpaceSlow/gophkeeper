@@ -247,6 +247,9 @@ type PaymentCardModel struct {
 
 	paymentCard *sensitive_records.PaymentCard
 	metadata    string
+
+	keys keys.BackQuitKeyMap
+	help help.Model
 }
 
 func NewPaymentCardModel(
@@ -260,6 +263,8 @@ func NewPaymentCardModel(
 		client:      client,
 		paymentCard: paymentCard,
 		metadata:    metadata,
+		keys:        keys.BackQuitKeys,
+		help:        help.New(),
 	}
 }
 
@@ -269,11 +274,13 @@ func (m PaymentCardModel) Init() tea.Cmd {
 
 func (m PaymentCardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.help.Width = msg.Width
 	case tea.KeyMsg:
-		switch msg.Type {
-		case tea.KeyEsc:
+		switch {
+		case key.Matches(msg, m.keys.Back):
 			return NewTableModel(m.ctx, m.client), nil
-		case tea.KeyCtrlC:
+		case key.Matches(msg, m.keys.Quit):
 			return m, tea.Quit
 		}
 	}
@@ -282,7 +289,7 @@ func (m PaymentCardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m PaymentCardModel) View() string {
-	return fmt.Sprintf(` %s
+	form := fmt.Sprintf(` %s
  %s
 
  %s	%s
@@ -305,4 +312,8 @@ func (m PaymentCardModel) View() string {
 		"Metadata",
 		m.metadata,
 	)
+
+	helpView := m.help.View(m.keys)
+	height := 20 - strings.Count(form, "\n") - strings.Count(helpView, "\n")
+	return "\n" + form + strings.Repeat("\n", height) + helpView
 }
