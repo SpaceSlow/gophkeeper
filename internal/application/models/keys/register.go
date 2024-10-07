@@ -1,6 +1,10 @@
 package keys
 
-import "github.com/charmbracelet/bubbles/key"
+import (
+	"github.com/charmbracelet/bubbles/key"
+
+	"github.com/SpaceSlow/gophkeeper/pkg/bubblekey"
+)
 
 type RegisterKeyMap struct {
 	PrevInput key.Binding
@@ -16,8 +20,8 @@ func (k RegisterKeyMap) ShortHelp() []key.Binding {
 
 func (k RegisterKeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
-		{k.PrevInput, k.NextInput, k.Enter},
-		{k.Back, k.Quit},
+		{k.PrevInput, k.NextInput, k.Back},
+		{k.Enter, bubblekey.Blank, k.Quit},
 	}
 }
 
