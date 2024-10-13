@@ -6,13 +6,13 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
-type UsernameClaims struct {
+type UserClaims struct {
 	jwt.RegisteredClaims
 	UserID int
 }
 
 func BuildJWT(userID int, tokenLifetime time.Duration, secretKey string) (string, error) {
-	t := jwt.NewWithClaims(jwt.SigningMethodHS256, UsernameClaims{
+	t := jwt.NewWithClaims(jwt.SigningMethodHS256, UserClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(tokenLifetime)),
 		},
@@ -28,7 +28,7 @@ func BuildJWT(userID int, tokenLifetime time.Duration, secretKey string) (string
 }
 
 func UserIDFromToken(tokenString, secretKey string) (int, error) {
-	claims := &UsernameClaims{}
+	claims := &UserClaims{}
 	token, err := jwt.ParseWithClaims(
 		tokenString,
 		claims,
