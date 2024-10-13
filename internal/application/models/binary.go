@@ -10,7 +10,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/SpaceSlow/gophkeeper/internal/application/models/keys"
 	"github.com/charmbracelet/bubbles/filepicker"
+	"github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 
@@ -144,6 +147,9 @@ type BinaryModel struct {
 	metadata  string
 	isSaved   bool
 	pathInput textinput.Model
+
+	keys keys.BinaryKeyMap
+	help help.Model
 }
 
 func NewBinaryModel(ctx context.Context, client *openapi.ClientWithResponses, binary *sensitive_records.Binary, metadata string) tea.Model {
@@ -153,12 +159,17 @@ func NewBinaryModel(ctx context.Context, client *openapi.ClientWithResponses, bi
 	pathInput.Placeholder = "file path"
 	pathInput.Prompt = ""
 
+	helpModel := help.New()
+	helpModel.ShowAll = true
 	return &BinaryModel{
 		ctx:       ctx,
 		client:    client,
 		binary:    binary,
 		metadata:  metadata,
 		pathInput: pathInput,
+
+		keys: keys.BinaryKeys,
+		help: helpModel,
 	}
 }
 
@@ -168,9 +179,11 @@ func (m BinaryModel) Init() tea.Cmd {
 
 func (m BinaryModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.help.Width = msg.Width
 	case tea.KeyMsg:
-		switch msg.Type {
-		case tea.KeyEnter:
+		switch {
+		case key.Matches(msg, m.keys.Enter):
 			if !m.pathInput.Focused() {
 				break
 			}
@@ -179,11 +192,11 @@ func (m BinaryModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				break
 			}
 			m.isSaved = true
-		case tea.KeyCtrlS:
+		case key.Matches(msg, m.keys.Save):
 			m.pathInput.Focus()
-		case tea.KeyCtrlC:
+		case key.Matches(msg, m.keys.Quit):
 			return m, tea.Quit
-		case tea.KeyEsc:
+		case key.Matches(msg, m.keys.Back):
 			return NewTableModel(m.ctx, m.client), nil
 		}
 	}
@@ -204,5 +217,8 @@ func (m BinaryModel) View() string {
 	if m.isSaved {
 		s.WriteString(" File saved!")
 	}
-	return s.String()
+	binaryView := s.String()
+	helpView := m.help.View(m.keys)
+	height := 20 - strings.Count(binaryView, "\n") - strings.Count(helpView, "\n")
+	return "\n" + binaryView + strings.Repeat("\n", height) + helpView
 }
