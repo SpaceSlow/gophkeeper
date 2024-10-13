@@ -28,14 +28,15 @@ func SetupHTTPServer(userRepo UserRepository, sensitiveRecordRepo SensitiveRecor
 	spec, _ := openapi.GetSwagger()
 	m := crypto.NewJWTMiddleware(cfg.SecretKey(), userRepo)
 
-	validator := ginmiddleware.OapiRequestValidatorWithOptions(spec,
-		&ginmiddleware.Options{
-			Options: openapi3filter.Options{
-				AuthenticationFunc: func(ctx context.Context, input *openapi3filter.AuthenticationInput) error {
-					return m.AuthenticateRequest(ctx, input)
-				},
+	validatorOptions := &ginmiddleware.Options{
+		Options: openapi3filter.Options{
+			AuthenticationFunc: func(ctx context.Context, input *openapi3filter.AuthenticationInput) error {
+				return m.AuthenticateRequest(ctx, input)
 			},
-		})
+		},
+	}
+
+	validator := ginmiddleware.OapiRequestValidatorWithOptions(spec, validatorOptions)
 
 	api := router.Group("/api", router.Handlers...)
 	api.Use(validator)
